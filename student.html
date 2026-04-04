@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Homework</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0b;--surface:#1a1816;--surface2:#222018;
+  --border:#2e2b26;--ink:#e8e4dc;--muted:#8a8680;--subtle:#3d3a35;
+  --cyan:#06b6d4;--cyan-d:#0891b2;--cyan-bg:rgba(6,182,212,.1);
+  --green:#5aaf7a;--green-bg:#0d1f14;
+  --red:#e85a5a;--red-bg:#2a0f0f;
+  --yellow:#f0c040;--yellow-bg:rgba(240,192,64,.1);
+  --r:10px;--rs:6px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6}
+
+/* ── PAGE SHELL ── */
+.page{min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#090807;border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.brand{font-size:16px;font-weight:600;color:var(--ink)}
+.brand span{color:var(--cyan)}
+.student-name-tag{margin-left:auto;font-size:13px;color:var(--muted)}
+
+.container{flex:1;padding:28px 20px;max-width:680px;margin:0 auto;width:100%}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;font-size:14px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--cyan-d);border-color:var(--cyan-d);color:#fff}
+.btn.pri:hover{background:var(--cyan);border-color:var(--cyan)}
+.btn.sm{padding:6px 13px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.full{width:100%}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],textarea{
+  font-family:inherit;font-size:15px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--ink);padding:10px 13px;outline:none;transition:border-color .12s;width:100%
+}
+input:focus,textarea:focus{border-color:var(--cyan)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:90px}
+
+/* ── LOADING / ERROR ── */
+.center-msg{text-align:center;padding:60px 20px;color:var(--muted)}
+.center-msg .big{font-size:36px;margin-bottom:12px}
+.loading-spin{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--muted)}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ASSIGNMENT LIST ── */
+.list-header{margin-bottom:20px}
+.list-title{font-size:22px;font-weight:600}
+.list-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+.asgn-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:16px}
+.asgn-card:hover{border-color:var(--cyan);background:var(--surface2)}
+.asgn-card.done{cursor:default;opacity:.75}
+.asgn-info{flex:1;min-width:0}
+.asgn-title{font-size:16px;font-weight:500;margin-bottom:3px}
+.asgn-due{font-size:12px;color:var(--muted)}
+.asgn-status{flex-shrink:0}
+
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.badge-new{background:var(--cyan-bg);color:var(--cyan)}
+.badge-submitted{background:rgba(90,175,122,.12);color:var(--green)}
+.badge-graded{background:var(--green-bg);color:var(--green)}
+.badge-score{background:var(--surface2);color:var(--ink)}
+
+/* ── ASSIGNMENT TAKING ── */
+.taking-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:24px}
+.back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:24px;padding:0 4px;line-height:1;transition:color .12s;flex-shrink:0;margin-top:2px}
+.back-btn:hover{color:var(--ink)}
+.taking-title{font-size:20px;font-weight:600;flex:1}
+.taking-due{font-size:12px;color:var(--muted);margin-top:2px}
+
+.question-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.q-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5}
+
+/* Multiple choice */
+.mc-options{display:flex;flex-direction:column;gap:8px}
+.mc-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none}
+.mc-opt:hover{border-color:var(--cyan);background:rgba(6,182,212,.05)}
+.mc-opt.selected{border-color:var(--cyan);background:var(--cyan-bg)}
+.mc-opt input[type=radio]{width:auto;accent-color:var(--cyan);cursor:pointer;flex-shrink:0}
+.mc-opt-label{font-size:14px}
+
+/* Fill in the blank */
+.fill-sentence{font-size:15px;line-height:2;flex-wrap:wrap}
+.fill-inp{
+  display:inline-block;width:auto;min-width:100px;max-width:200px;
+  padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;
+  border-radius:0;background:transparent;color:var(--ink);font-size:15px;
+  outline:none;vertical-align:middle
+}
+.fill-inp:focus{border-bottom-color:var(--cyan);background:rgba(6,182,212,.06)}
+
+/* Submit / results */
+.submit-area{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.result-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.result-score{font-size:36px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+.result-label{font-size:13px;color:var(--muted)}
+.result-feedback{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:14px;line-height:1.6;color:var(--ink)}
+.result-feedback-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+
+/* Success banner */
+.success-banner{background:var(--green-bg);border:1px solid rgba(90,175,122,.3);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:20px}
+.success-icon{font-size:32px;margin-bottom:8px}
+.success-title{font-size:18px;font-weight:600;color:var(--green)}
+.success-sub{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── TOP BAR ── -->
+  <header class="topbar">
+    <div class="brand"><span>✦</span> Homework</div>
+    <span class="student-name-tag" id="top-name"></span>
+  </header>
+
+  <!-- ── CONTENT ── -->
+  <div class="container">
+
+    <!-- Loading screen -->
+    <div class="screen active" id="s-loading">
+      <div class="loading-spin"><div class="spinner"></div> Loading…</div>
+    </div>
+
+    <!-- Error screen -->
+    <div class="screen" id="s-error">
+      <div class="center-msg">
+        <div class="big">🔗</div>
+        <div id="error-msg">Invalid or missing link.</div>
+      </div>
+    </div>
+
+    <!-- Assignment list screen -->
+    <div class="screen" id="s-list">
+      <div class="list-header">
+        <div class="list-title" id="list-title">Your Homework</div>
+        <div class="list-sub" id="list-sub"></div>
+      </div>
+      <div id="assignments-list"></div>
+    </div>
+
+    <!-- Assignment taking screen -->
+    <div class="screen" id="s-take">
+      <div class="taking-hd">
+        <button class="back-btn" onclick="backToList()" title="Back">←</button>
+        <div>
+          <div class="taking-title" id="take-title"></div>
+          <div class="taking-due" id="take-due"></div>
+        </div>
+      </div>
+      <div id="take-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURATION — paste your Supabase values here
+// ═══════════════════════════════════════════════
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let student    = null;   // current student record
+let myAsgns    = [];     // assigned assignments with submission info
+let openAsgn   = null;   // assignment being taken
+let openItems  = [];     // questions for open assignment
+let openSub    = null;   // existing submission if any
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmt(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return `Due ${day}.${m}.${y}`;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  showScreen('s-error');
+}
+
+// ═══════════════════════════════════════════════
+//  INIT — read token from URL, boot the app
+// ═══════════════════════════════════════════════
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('t');
+
+  if (!token) {
+    showError('No homework link found. Ask your teacher for your private link.');
+    return;
+  }
+
+  try {
+    // Look up student by token
+    const { data, error } = await sb.from('students')
+      .select('*').eq('token', token).single();
+    if (error || !data) {
+      showError('This link is invalid or has expired. Ask your teacher for a new link.');
+      return;
+    }
+    student = data;
+    document.getElementById('top-name').textContent = student.name;
+    document.getElementById('list-title').textContent = `${student.name}'s Homework`;
+
+    await loadAssignments();
+  } catch (e) {
+    showError(`Something went wrong: ${e.message}`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  ASSIGNMENT LIST
+// ═══════════════════════════════════════════════
+async function loadAssignments() {
+  try {
+    // Get all assignments assigned to this student
+    const { data: sa, error: e1 } = await sb.from('student_assignments')
+      .select('assignment_id, assignments(*)')
+      .eq('student_id', student.id);
+    if (e1) throw e1;
+
+    // Get submissions by this student
+    const { data: subs, error: e2 } = await sb.from('submissions')
+      .select('*').eq('student_id', student.id);
+    if (e2) throw e2;
+
+    const subMap = {};
+    (subs || []).forEach(s => { subMap[s.assignment_id] = s; });
+
+    // Build merged list, sort by due_date ascending
+    myAsgns = (sa || [])
+      .map(row => ({ ...row.assignments, submission: subMap[row.assignment_id] || null }))
+      .sort((a, b) => {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return a.due_date.localeCompare(b.due_date);
+      });
+
+    renderList();
+    showScreen('s-list');
+  } catch (e) {
+    showError(`Could not load assignments: ${e.message}`);
+  }
+}
+
+function renderList() {
+  const el = document.getElementById('assignments-list');
+  const sub = document.getElementById('list-sub');
+
+  const total   = myAsgns.length;
+  const done    = myAsgns.filter(a => a.submission).length;
+  sub.textContent = total
+    ? `${done} of ${total} completed`
+    : 'No assignments yet — check back later.';
+
+  if (!total) { el.innerHTML = ''; return; }
+
+  el.innerHTML = myAsgns.map(a => {
+    const s = a.submission;
+    let badgeHtml = '', clickable = true;
+
+    if (!s) {
+      badgeHtml = '<span class="badge badge-new">New</span>';
+    } else if (s.status === 'graded') {
+      badgeHtml = `<span class="badge badge-graded">Graded</span>
+                   <span class="badge badge-score" style="margin-left:5px">${s.score}/${s.max_score}</span>`;
+    } else {
+      badgeHtml = '<span class="badge badge-submitted">Submitted</span>';
+      clickable = false; // submitted but not graded — show result on click still
+    }
+
+    return `
+      <div class="asgn-card ${s ? 'done' : ''}" onclick="openAssignment('${a.id}')">
+        <div class="asgn-info">
+          <div class="asgn-title">${esc(a.title)}</div>
+          ${a.due_date ? `<div class="asgn-due">${fmt(a.due_date)}</div>` : ''}
+          ${a.description ? `<div class="asgn-due" style="margin-top:2px">${esc(a.description)}</div>` : ''}
+        </div>
+        <div class="asgn-status">${badgeHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  OPEN & TAKE ASSIGNMENT
+// ═══════════════════════════════════════════════
+async function openAssignment(id) {
+  openAsgn = myAsgns.find(a => a.id === id);
+  if (!openAsgn) return;
+
+  showScreen('s-loading');
+
+  try {
+    // Load questions
+    const { data: items, error: e1 } = await sb.from('items')
+      .select('*').eq('assignment_id', id).order('order_index');
+    if (e1) throw e1;
+    openItems = items || [];
+
+    // Get submission if exists
+    openSub = openAsgn.submission || null;
+
+    // Render
+    document.getElementById('take-title').textContent = openAsgn.title;
+    document.getElementById('take-due').textContent   = openAsgn.due_date ? fmt(openAsgn.due_date) : '';
+
+    if (openSub) {
+      renderResult();
+    } else {
+      renderTaking();
+    }
+    showScreen('s-take');
+  } catch (e) {
+    showError(`Could not load assignment: ${e.message}`);
+  }
+}
+
+function backToList() {
+  openAsgn  = null;
+  openItems = [];
+  openSub   = null;
+  showScreen('s-list');
+  loadAssignments(); // refresh statuses
+}
+
+// ── RENDER QUESTIONS FORM ──────────────────────
+function renderTaking() {
+  const el = document.getElementById('take-body');
+
+  if (!openItems.length) {
+    el.innerHTML = '<div style="color:var(--muted);padding:20px 0">No questions in this assignment yet.</div>';
+    return;
+  }
+
+  const questions = openItems.map((item, i) => questionHtml(item, i)).join('');
+
+  el.innerHTML = `
+    ${questions}
+    <div class="submit-area">
+      <button class="btn pri full" id="submit-btn" onclick="submitAssignment()">Submit Assignment</button>
+    </div>`;
+}
+
+function questionHtml(item, i) {
+  let body = '';
+
+  if (item.type === 'multiple_choice') {
+    const opts = (item.options || []).filter(o => o && o.toString().trim());
+    body = `
+      <div class="mc-options">
+        ${opts.map((opt, j) => `
+          <label class="mc-opt" id="opt-${item.id}-${j}" onclick="selectMC('${item.id}',${j})">
+            <input type="radio" name="mc-${item.id}" value="${j}" style="pointer-events:none"/>
+            <span class="mc-opt-label">${esc(opt)}</span>
+          </label>`).join('')}
+      </div>`;
+
+  } else if (item.type === 'fill_blank') {
+    // Replace ___ with an inline input
+    const parts = item.question.split('___');
+    let sentence = '';
+    parts.forEach((part, j) => {
+      sentence += esc(part);
+      if (j < parts.length - 1) {
+        sentence += `<input type="text" class="fill-inp" id="fill-${item.id}"
+          placeholder="…" autocomplete="off" autocorrect="off" spellcheck="false"/>`;
+      }
+    });
+    body = `<div class="fill-sentence">${sentence}</div>`;
+
+  } else {
+    // Short answer
+    body = `<textarea id="sa-${item.id}" placeholder="Write your answer here…"></textarea>`;
+  }
+
+  // For fill_blank, question text is already in the sentence; for others show separately
+  const showQText = item.type !== 'fill_blank';
+
+  return `
+    <div class="question-block">
+      <div class="q-num">Question ${i + 1} of ${openItems.length}</div>
+      ${showQText ? `<div class="q-text">${esc(item.question)}</div>` : ''}
+      ${body}
+    </div>`;
+}
+
+function selectMC(itemId, optIdx) {
+  // Visual selection
+  document.querySelectorAll(`[id^="opt-${itemId}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`opt-${itemId}-${optIdx}`)?.classList.add('selected');
+  // Set radio
+  const radio = document.querySelector(`input[name="mc-${itemId}"][value="${optIdx}"]`);
+  if (radio) radio.checked = true;
+}
+
+// ── COLLECT ANSWERS ────────────────────────────
+function collectAnswers() {
+  const answers = {};
+  let missing = false;
+
+  openItems.forEach(item => {
+    if (item.type === 'multiple_choice') {
+      const radio = document.querySelector(`input[name="mc-${item.id}"]:checked`);
+      if (radio) {
+        answers[item.id] = radio.value; // index as string
+      } else {
+        answers[item.id] = '';
+        missing = true;
+      }
+    } else if (item.type === 'fill_blank') {
+      answers[item.id] = document.getElementById(`fill-${item.id}`)?.value.trim() || '';
+      if (!answers[item.id]) missing = true;
+    } else {
+      answers[item.id] = document.getElementById(`sa-${item.id}`)?.value.trim() || '';
+      // short answer blank is allowed
+    }
+  });
+
+  return { answers, missing };
+}
+
+// ── AUTO-SCORE ────────────────────────────────
+function autoScore(answers) {
+  let score = 0, maxScore = 0;
+  openItems.forEach(item => {
+    if (item.type === 'short_answer') { maxScore++; return; } // counted but not auto-scored
+    maxScore++;
+    const given   = String(answers[item.id] || '').trim().toLowerCase();
+    const correct = String(item.correct_answer || '').trim().toLowerCase();
+    if (given === correct) score++;
+  });
+  return { score, maxScore };
+}
+
+// ── SUBMIT ────────────────────────────────────
+async function submitAssignment() {
+  const { answers, missing } = collectAnswers();
+  const mcOrFill = openItems.filter(i => i.type !== 'short_answer');
+
+  if (missing && mcOrFill.length > 0) {
+    const proceed = confirm('You have unanswered questions. Submit anyway?');
+    if (!proceed) return;
+  }
+
+  const { score, maxScore } = autoScore(answers);
+  const btn = document.getElementById('submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+  try {
+    const { data, error } = await sb.from('submissions').insert({
+      student_id:    student.id,
+      assignment_id: openAsgn.id,
+      answers,
+      score,
+      max_score: maxScore,
+      status: 'submitted',
+    }).select().single();
+    if (error) throw error;
+
+    openSub = data;
+    renderResult();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Assignment'; }
+    alert(`Could not submit: ${e.message}`);
+  }
+}
+
+// ── RENDER RESULT (submitted or graded) ──────
+function renderResult() {
+  const el  = document.getElementById('take-body');
+  const sub = openSub;
+
+  if (sub.status === 'graded') {
+    // Show full result with score and feedback
+    let html = `
+      <div class="result-box">
+        <div class="result-label">Your Score</div>
+        <div class="result-score">${sub.score} / ${sub.max_score}</div>
+        ${sub.feedback ? `
+          <div class="result-feedback">
+            <div class="result-feedback-label">Teacher's feedback</div>
+            ${esc(sub.feedback)}
+          </div>` : ''}
+      </div>`;
+
+    // Show answers with correct/wrong indicators
+    if (openItems.length) {
+      html += '<div style="margin-top:4px">';
+      const answers = sub.answers || {};
+
+      openItems.forEach((item, i) => {
+        let reviewHtml = '';
+        const studentAns = answers[item.id] || '';
+
+        if (item.type === 'multiple_choice') {
+          const opts      = item.options || [];
+          const givenIdx  = parseInt(studentAns);
+          const corrIdx   = parseInt(item.correct_answer);
+          const isCorrect = givenIdx === corrIdx;
+          const givenTxt  = opts[givenIdx] ?? '—';
+          const corrTxt   = opts[corrIdx]  ?? '—';
+
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isCorrect ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isCorrect ? '✓' : '✗'} Your answer: ${esc(givenTxt)}
+              </div>
+              ${!isCorrect ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(corrTxt)}</div>` : ''}
+            </div>`;
+
+        } else if (item.type === 'fill_blank') {
+          const given   = String(studentAns).trim().toLowerCase();
+          const correct = String(item.correct_answer || '').trim().toLowerCase();
+          const isOk    = given === correct;
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isOk ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isOk ? '✓' : '✗'} Your answer: ${esc(studentAns) || '(blank)'}
+              </div>
+              ${!isOk ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(item.correct_answer)}</div>` : ''}
+            </div>`;
+        } else {
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px;color:var(--muted)">
+              Your answer: ${esc(studentAns) || '(no answer)'}
+            </div>`;
+        }
+
+        html += `
+          <div class="question-block" style="cursor:default">
+            <div class="q-num">Question ${i+1}</div>
+            <div class="q-text">${esc(item.type === 'fill_blank' ? item.question.replace('___','____') : item.question)}</div>
+            ${reviewHtml}
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+
+  } else {
+    // Submitted but not graded yet
+    el.innerHTML = `
+      <div class="success-banner">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Submitted!</div>
+        <div class="success-sub">Your teacher will grade this soon. Check back later.</div>
+      </div>
+      <div style="text-align:center">
+        <button class="btn" onclick="backToList()">← Back to Assignments</button>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
