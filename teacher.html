@@ -11,7 +11,7 @@
   --bg:#0e0d0b;--surface:#1a1816;--surface2:#222018;
   --border:#2e2b26;--ink:#e8e4dc;--muted:#8a8680;--subtle:#3d3a35;
   --cyan:#06b6d4;--cyan-d:#0891b2;--cyan-bg:rgba(6,182,212,.08);
-  --green:#5aaf7a;--green-bg:#0d1f14;onst
+  --green:#5aaf7a;--green-bg:#0d1f14;
   --red:#e85a5a;--red-bg:#2a0f0f;
   --yellow:#f0c040;
   --r:8px;--rs:5px;
@@ -178,7 +178,10 @@ textarea{resize:vertical;min-height:72px}
     <section class="view active" id="v-students">
       <div class="view-hd">
         <h1 class="view-title">Students</h1>
-        <button class="btn pri" onclick="toggleForm('add-student-form',this,'+ Add Student')">+ Add Student</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="syncFromWork()" title="Import active students from your Work tab">⟳ Sync from Work</button>
+          <button class="btn pri" onclick="toggleForm('add-student-form',this,'+ Add Student')">+ Add Student</button>
+        </div>
       </div>
 
       <div id="add-student-form" style="display:none" class="inline-form">
@@ -310,6 +313,7 @@ textarea{resize:vertical;min-height:72px}
 // ═══════════════════════════════════════════════
 const SUPABASE_URL  = 'https://qqqjiwrfudcvsjcxeavd.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTgxMDAsImV4cCI6MjA5MDg5NDEwMH0.hvUN1MAP32eF-4sbjpQXRFWRyf3prsDjDGu_vzwvpyo';
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ═══════════════════════════════════════════════
@@ -1026,7 +1030,51 @@ async function saveGrade(maxScore) {
 function closeGradingModal() {
   document.getElementById('grading-modal').style.display = 'none';
 }
-  
+
+// ═══════════════════════════════════════════════
+//  SYNC FROM WORK TAB
+// ═══════════════════════════════════════════════
+async function syncFromWork() {
+  // Read the brain app's localStorage data (same domain = shared storage)
+  let workData;
+  try {
+    workData = JSON.parse(localStorage.getItem('mind_work_v8') || 'null');
+  } catch(e) {
+    toast('Could not read Work tab data', 'err'); return;
+  }
+  if (!workData?.students?.length) {
+    toast('No students found in Work tab', 'err'); return;
+  }
+
+  // Only active (non-archived) students
+  const active = workData.students.filter(s => !s.archived);
+  if (!active.length) { toast('No active students in Work tab', 'err'); return; }
+
+  // Fetch existing students from Supabase to avoid duplicates
+  const { data: existing, error } = await sb.from('students').select('name');
+  if (error) { toast(error.message, 'err'); return; }
+
+  const existingNames = new Set((existing || []).map(s => s.name.trim().toLowerCase()));
+  const toAdd = active.filter(s => !existingNames.has(s.name.trim().toLowerCase()));
+
+  if (!toAdd.length) {
+    toast('All Work tab students are already synced!'); return;
+  }
+
+  const names = toAdd.map(s => s.name).join(', ');
+  if (!confirm(`Add ${toAdd.length} student(s) to Homework?\n\n${names}`)) return;
+
+  try {
+    const rows = toAdd.map(s => ({ name: s.name.trim(), token: genToken() }));
+    const { error: e2 } = await sb.from('students').insert(rows);
+    if (e2) throw e2;
+    toast(`Synced ${toAdd.length} student(s) from Work tab`);
+    loadStudents();
+  } catch(e) {
+    toast(e.message, 'err');
+  }
+}
+
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
