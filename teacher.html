@@ -153,6 +153,20 @@ textarea{resize:vertical;min-height:72px}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── AI CHAT ── */
+.ai-wrap{display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.ai-key-bar{display:flex;gap:8px;align-items:center;padding:10px 0 16px;flex-shrink:0;flex-wrap:wrap}
+.ai-key-bar input{flex:1;min-width:200px;font-family:monospace;font-size:13px}
+.ai-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 0 16px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.ai-msg{max-width:85%;padding:12px 15px;border-radius:var(--r);font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{align-self:flex-end;background:var(--cyan-d);color:#fff;border-radius:var(--r) var(--r) 4px var(--r)}
+.ai-msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r) var(--r) var(--r) 4px}
+.ai-msg.ai.thinking{color:var(--muted);font-style:italic}
+.ai-msg.created{align-self:flex-start;background:var(--green-bg);border:1px solid rgba(90,175,122,.3);color:var(--green);border-radius:var(--r);cursor:pointer}
+.ai-msg.created:hover{border-color:var(--green)}
+.ai-input-row{display:flex;gap:8px;flex-shrink:0;padding-top:8px;border-top:1px solid var(--border)}
+.ai-input-row textarea{flex:1;min-height:44px;max-height:140px;resize:none;font-size:14px;padding:10px 12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -167,6 +181,9 @@ textarea{resize:vertical;min-height:72px}
       </button>
       <button class="nav-item" id="nav-assignments" onclick="showView('assignments')">
         <span class="nav-icon">📝</span> Assignments
+      </button>
+      <button class="nav-item" id="nav-ai" onclick="showView('ai')">
+        <span class="nav-icon">✦</span> AI Generator
       </button>
     </nav>
   </aside>
@@ -277,6 +294,30 @@ textarea{resize:vertical;min-height:72px}
         <div class="section-label">Assign to Students</div>
         <div id="assign-student-list" class="checkbox-list"></div>
         <button class="btn pri" onclick="saveAssignments()" style="margin-top:4px">Save Assignments</button>
+      </div>
+    </section>
+
+    <!-- AI GENERATOR VIEW -->
+    <section class="view" id="v-ai">
+      <div class="view-hd" style="margin-bottom:0">
+        <h1 class="view-title">AI Homework Generator</h1>
+      </div>
+      <div class="ai-wrap">
+        <!-- API key row -->
+        <div class="ai-key-bar">
+          <input type="password" id="ai-key-inp" placeholder="Paste your Anthropic API key (sk-ant-…)" style="font-family:monospace"/>
+          <button class="btn sm" onclick="saveAiKey()">Save Key</button>
+          <span id="ai-key-status" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <!-- Messages -->
+        <div class="ai-messages" id="ai-messages">
+          <div class="ai-msg ai">👋 Hi! Tell me what homework to create.\n\nExamples:\n• "Make 5 multiple choice questions about Past Simple"\n• "Fill in the blank exercises: she ___ (go), he ___ (eat), they ___ (write)"\n• "Mixed quiz on animals vocabulary, 6 questions"\n• Just paste a list of words or a grammar topic and I'll do the rest.</div>
+        </div>
+        <!-- Input -->
+        <div class="ai-input-row">
+          <textarea id="ai-inp" placeholder="Describe the homework you want…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
+          <button class="btn pri" onclick="sendAiMessage()" style="align-self:flex-end;padding:10px 16px">Send</button>
+        </div>
       </div>
     </section>
 
@@ -1032,6 +1073,171 @@ function closeGradingModal() {
 }
 
 // ═══════════════════════════════════════════════
+//  AI GENERATOR
+// ═══════════════════════════════════════════════
+const AI_KEY_SK = 'hw_ai_key';
+
+function saveAiKey() {
+  const key = document.getElementById('ai-key-inp').value.trim();
+  if (!key.startsWith('sk-ant-')) { toast('Key should start with sk-ant-', 'err'); return; }
+  localStorage.setItem(AI_KEY_SK, key);
+  document.getElementById('ai-key-inp').value = '';
+  document.getElementById('ai-key-status').textContent = '✓ Key saved';
+  toast('API key saved');
+}
+
+function loadAiKey() {
+  const key = localStorage.getItem(AI_KEY_SK) || '';
+  if (key) document.getElementById('ai-key-status').textContent = '✓ Key saved';
+}
+
+function appendMsg(role, text) {
+  const el = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  return div;
+}
+
+async function sendAiMessage() {
+  const key = localStorage.getItem(AI_KEY_SK);
+  if (!key) { toast('Save your Anthropic API key first', 'err'); return; }
+
+  const inp = document.getElementById('ai-inp');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  inp.value = '';
+  appendMsg('user', text);
+  const thinking = appendMsg('ai thinking', '✦ Thinking…');
+
+  const systemPrompt = `You are a homework generator for an English language tutor.
+The teacher will describe what homework they want and you generate it.
+
+You MUST respond with ONLY valid JSON — no explanation, no markdown, no code block. Just raw JSON.
+
+Format:
+{
+  "title": "Short assignment title",
+  "description": "One sentence description or null",
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "Question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct_answer": "0"
+    },
+    {
+      "type": "fill_blank",
+      "question": "She ___ to school every day.",
+      "correct_answer": "goes"
+    },
+    {
+      "type": "short_answer",
+      "question": "Describe your daily routine in 2-3 sentences."
+    }
+  ]
+}
+
+Rules:
+- multiple_choice: options array (2-6 items), correct_answer is the index as a string ("0","1","2"…)
+- fill_blank: question contains exactly one ___, correct_answer is the expected word/phrase
+- short_answer: no correct_answer needed
+- Mix question types when it makes sense
+- Generate 4-8 questions unless teacher specifies
+- Make questions appropriate for English learners`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: text }],
+      }),
+    });
+
+    const data = await res.json();
+    thinking.remove();
+
+    if (!res.ok) {
+      appendMsg('ai', `Error: ${data.error?.message || res.statusText}`);
+      return;
+    }
+
+    const raw = data.content?.[0]?.text || '';
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // Try to extract JSON if Claude wrapped it anyway
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else { appendMsg('ai', 'Could not parse response. Try again.'); return; }
+    }
+
+    // Preview the result
+    const qCount = parsed.questions?.length || 0;
+    const preview = appendMsg('ai', `✓ Generated "${parsed.title}" — ${qCount} questions\n\nClick below to create this assignment ↓`);
+
+    // Create-button message
+    const btn = appendMsg('created', `📝 Create "${parsed.title}" →`);
+    btn.onclick = () => createFromAi(parsed, btn);
+
+  } catch (e) {
+    thinking.remove();
+    appendMsg('ai', `Error: ${e.message}`);
+  }
+}
+
+async function createFromAi(parsed, btnEl) {
+  btnEl.textContent = '⏳ Creating…';
+  btnEl.onclick = null;
+  try {
+    // Create assignment
+    const { data: asgn, error: e1 } = await sb.from('assignments').insert({
+      title: parsed.title,
+      description: parsed.description || null,
+      due_date: null,
+    }).select().single();
+    if (e1) throw e1;
+
+    // Insert questions
+    if (parsed.questions?.length) {
+      const items = parsed.questions.map((q, i) => ({
+        assignment_id: asgn.id,
+        type: q.type,
+        question: q.question,
+        options: q.options || null,
+        correct_answer: q.correct_answer ?? null,
+        order_index: i,
+      }));
+      const { error: e2 } = await sb.from('items').insert(items);
+      if (e2) throw e2;
+    }
+
+    btnEl.textContent = `✓ Created! Opening builder…`;
+    btnEl.style.cursor = 'default';
+    toast(`Created "${parsed.title}"`);
+    await loadAssignments();
+    setTimeout(() => openBuilder(asgn.id), 600);
+  } catch(e) {
+    btnEl.textContent = '✗ Failed — click to retry';
+    btnEl.onclick = () => createFromAi(parsed, btnEl);
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
 //  SYNC FROM WORK TAB
 // ═══════════════════════════════════════════════
 async function syncFromWork() {
@@ -1079,6 +1285,7 @@ async function syncFromWork() {
 //  INIT
 // ═══════════════════════════════════════════════
 loadStudents();
+loadAiKey();
 </script>
 </body>
 </html>
