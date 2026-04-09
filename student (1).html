@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Homework</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0b;--surface:#1a1816;--surface2:#222018;
+  --border:#2e2b26;--ink:#e8e4dc;--muted:#8a8680;--subtle:#3d3a35;
+  --cyan:#06b6d4;--cyan-d:#0891b2;--cyan-bg:rgba(6,182,212,.1);
+  --green:#5aaf7a;--green-bg:#0d1f14;
+  --red:#e85a5a;--red-bg:#2a0f0f;
+  --yellow:#f0c040;--yellow-bg:rgba(240,192,64,.1);
+  --r:10px;--rs:6px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6}
+
+/* ── PAGE SHELL ── */
+.page{min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#090807;border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.brand{font-size:16px;font-weight:600;color:var(--ink)}
+.brand span{color:var(--cyan)}
+.student-name-tag{margin-left:auto;font-size:13px;color:var(--muted)}
+
+.container{flex:1;padding:28px 20px;max-width:680px;margin:0 auto;width:100%}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;font-size:14px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--cyan-d);border-color:var(--cyan-d);color:#fff}
+.btn.pri:hover{background:var(--cyan);border-color:var(--cyan)}
+.btn.sm{padding:6px 13px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.full{width:100%}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],textarea{
+  font-family:inherit;font-size:15px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--ink);padding:10px 13px;outline:none;transition:border-color .12s;width:100%
+}
+input:focus,textarea:focus{border-color:var(--cyan)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:90px}
+
+/* ── LOADING / ERROR ── */
+.center-msg{text-align:center;padding:60px 20px;color:var(--muted)}
+.center-msg .big{font-size:36px;margin-bottom:12px}
+.loading-spin{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--muted)}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ASSIGNMENT LIST ── */
+.list-header{margin-bottom:20px}
+.list-title{font-size:22px;font-weight:600}
+.list-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+.asgn-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:16px}
+.asgn-card:hover{border-color:var(--cyan);background:var(--surface2)}
+.asgn-card.done{cursor:default;opacity:.75}
+.asgn-info{flex:1;min-width:0}
+.asgn-title{font-size:16px;font-weight:500;margin-bottom:3px}
+.asgn-due{font-size:12px;color:var(--muted)}
+.asgn-status{flex-shrink:0}
+
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.badge-new{background:var(--cyan-bg);color:var(--cyan)}
+.badge-submitted{background:rgba(90,175,122,.12);color:var(--green)}
+.badge-graded{background:var(--green-bg);color:var(--green)}
+.badge-score{background:var(--surface2);color:var(--ink)}
+
+/* ── ASSIGNMENT TAKING ── */
+.taking-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:24px}
+.back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:24px;padding:0 4px;line-height:1;transition:color .12s;flex-shrink:0;margin-top:2px}
+.back-btn:hover{color:var(--ink)}
+.taking-title{font-size:20px;font-weight:600;flex:1}
+.taking-due{font-size:12px;color:var(--muted);margin-top:2px}
+
+.question-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.q-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5}
+
+/* Multiple choice */
+.mc-options{display:flex;flex-direction:column;gap:8px}
+.mc-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none}
+.mc-opt:hover{border-color:var(--cyan);background:rgba(6,182,212,.05)}
+.mc-opt.selected{border-color:var(--cyan);background:var(--cyan-bg)}
+.mc-opt input[type=radio]{width:auto;accent-color:var(--cyan);cursor:pointer;flex-shrink:0}
+.mc-opt-label{font-size:14px}
+
+/* Fill in the blank */
+.fill-sentence{font-size:15px;line-height:2;flex-wrap:wrap}
+.fill-inp{
+  display:inline-block;width:auto;min-width:100px;max-width:200px;
+  padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;
+  border-radius:0;background:transparent;color:var(--ink);font-size:15px;
+  outline:none;vertical-align:middle
+}
+.fill-inp:focus{border-bottom-color:var(--cyan);background:rgba(6,182,212,.06)}
+
+/* Submit / results */
+.submit-area{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.result-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.result-score{font-size:36px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+.result-label{font-size:13px;color:var(--muted)}
+.result-feedback{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:14px;line-height:1.6;color:var(--ink)}
+.result-feedback-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+
+/* Success banner */
+.success-banner{background:var(--green-bg);border:1px solid rgba(90,175,122,.3);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:20px}
+.success-icon{font-size:32px;margin-bottom:8px}
+.success-title{font-size:18px;font-weight:600;color:var(--green)}
+.success-sub{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── PROGRESS TEST ── */
+.pt-hero{text-align:center;padding:32px 0 24px}
+.pt-hero-title{font-size:24px;font-weight:700;margin-bottom:6px}
+.pt-hero-sub{font-size:14px;color:var(--muted)}
+.pt-hero-badge{display:inline-block;background:var(--cyan-bg);color:var(--cyan);font-size:12px;font-weight:600;padding:4px 14px;border-radius:99px;margin-bottom:14px;letter-spacing:.04em}
+.pt-section{margin-bottom:28px}
+.pt-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pt-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.pt-q-num{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:5px}
+.pt-q-text{font-size:15px;font-weight:500;line-height:1.55;margin-bottom:12px}
+.pt-q-text em{font-style:italic;color:var(--muted);font-weight:400;font-size:14px}
+.pt-opts{display:flex;flex-direction:column;gap:7px}
+.pt-opt{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none;font-size:14px;color:var(--ink)}
+.pt-opt:hover{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.sel{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.correct{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.pt-opt.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.pt-fill{width:100%;margin-top:4px}
+.pt-textarea{width:100%;margin-top:4px;min-height:72px}
+.pt-fill-inline{display:inline-block;width:auto;min-width:110px;max-width:180px;padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;border-radius:0;background:transparent;color:var(--ink);font-size:15px;outline:none;vertical-align:middle;font-family:inherit}
+.pt-fill-inline:focus{background:rgba(6,182,212,.06)}
+.pt-speaking-prompt{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:14px;color:var(--ink);line-height:1.6;margin-bottom:10px}
+.pt-speaking-note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.pt-voice-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--ink);transition:all .12s;font-family:inherit}
+.pt-voice-btn:hover{border-color:var(--cyan)}
+.pt-voice-btn.recording{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.pt-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.pt-dot.rec{background:var(--red);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pt-audio-wrap{margin-top:8px}
+.pt-audio-wrap audio{width:100%;height:36px}
+.pt-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.pt-progress-fill{height:4px;background:var(--cyan);border-radius:2px;transition:width .4s}
+.pt-score-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:20px}
+.pt-score-num{font-size:48px;font-weight:700;color:var(--cyan)}
+.pt-score-label{font-size:14px;color:var(--muted);margin-top:4px}
+.pt-score-msg{font-size:15px;color:var(--ink);margin-top:12px;font-weight:500}
+.pt-review-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.pt-correct-mark{color:var(--green);font-size:13px;margin-top:6px}
+.pt-wrong-mark{color:var(--red);font-size:13px;margin-top:6px}
+.pt-correct-ans{color:var(--muted);font-size:12px;margin-top:3px}
+.pt-submit-area{padding:4px 0 32px;display:flex;flex-direction:column;gap:10px}
+.pt-instr{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.pt-passage{background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.8;color:var(--ink)}
+.pt-passage p{margin-bottom:10px}.pt-passage p:last-child{margin-bottom:0}
+.pt-hint{font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px;margin-top:-2px;line-height:1.5}
+.pt-wordcount{font-size:12px;color:var(--muted);text-align:right;margin-bottom:4px}
+.pt-match-grid{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.pt-match-row{display:flex;align-items:center;gap:8px}
+.pt-match-term{font-size:14px;font-weight:500;color:var(--ink);min-width:130px;padding:7px 12px;background:var(--surface2);border-radius:var(--rs);border:1px solid var(--border)}
+.pt-match-arrow{color:var(--muted);font-size:16px;flex-shrink:0}
+.pt-match-sel{flex:1;padding:8px 10px;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--ink);font-family:inherit;cursor:pointer}
+.pt-match-sel:focus{outline:none;border-color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── TOP BAR ── -->
+  <header class="topbar">
+    <div class="brand"><span>✦</span> Homework</div>
+    <span class="student-name-tag" id="top-name"></span>
+  </header>
+
+  <!-- ── CONTENT ── -->
+  <div class="container">
+
+    <!-- Loading screen -->
+    <div class="screen active" id="s-loading">
+      <div class="loading-spin"><div class="spinner"></div> Loading…</div>
+    </div>
+
+    <!-- Error screen -->
+    <div class="screen" id="s-error">
+      <div class="center-msg">
+        <div class="big">🔗</div>
+        <div id="error-msg">Invalid or missing link.</div>
+      </div>
+    </div>
+
+    <!-- Assignment list screen -->
+    <div class="screen" id="s-list">
+      <div class="list-header">
+        <div class="list-title" id="list-title">Your Homework</div>
+        <div class="list-sub" id="list-sub"></div>
+      </div>
+      <div id="assignments-list"></div>
+    </div>
+
+    <!-- Progress test screen -->
+    <div class="screen" id="s-progress">
+      <div class="pt-hero">
+        <div class="pt-hero-badge">End-of-course progress test</div>
+        <div class="pt-hero-title">Aida's Final Review</div>
+        <div class="pt-hero-sub">Vocabulary · Grammar · Writing · Speaking</div>
+      </div>
+      <div class="pt-progress-bar"><div class="pt-progress-fill" id="pt-prog" style="width:0%"></div></div>
+      <div id="pt-body"></div>
+    </div>
+
+    <!-- Assignment taking screen -->
+    <div class="screen" id="s-take">
+      <div class="taking-hd">
+        <button class="back-btn" onclick="backToList()" title="Back">←</button>
+        <div>
+          <div class="taking-title" id="take-title"></div>
+          <div class="taking-due" id="take-due"></div>
+        </div>
+      </div>
+      <div id="take-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURATION — paste your Supabase values here
+// ═══════════════════════════════════════════════
+const SUPABASE_URL  = 'https://qqqjiwrfudcvsjcxeavd.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTgxMDAsImV4cCI6MjA5MDg5NDEwMH0.hvUN1MAP32eF-4sbjpQXRFWRyf3prsDjDGu_vzwvpyo';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let student    = null;   // current student record
+let myAsgns    = [];     // assigned assignments with submission info
+let openAsgn   = null;   // assignment being taken
+let openItems  = [];     // questions for open assignment
+let openSub    = null;   // existing submission if any
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmt(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return `Due ${day}.${m}.${y}`;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  showScreen('s-error');
+}
+
+// ═══════════════════════════════════════════════
+//  INIT — read token from URL, boot the app
+// ═══════════════════════════════════════════════
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('t');
+
+  // Progress test mode — no login needed
+  if (params.get('test') === 'progress') {
+    document.getElementById('top-name').textContent = 'Aida';
+    initProgressTest();
+    return;
+  }
+
+  if (!token) {
+    showError('No homework link found. Ask your teacher for your private link.');
+    return;
+  }
+
+  try {
+    // Look up student by token
+    const { data, error } = await sb.from('students')
+      .select('*').eq('token', token).single();
+    if (error || !data) {
+      showError('This link is invalid or has expired. Ask your teacher for a new link.');
+      return;
+    }
+    student = data;
+    document.getElementById('top-name').textContent = student.name;
+    document.getElementById('list-title').textContent = `${student.name}'s Homework`;
+
+    await loadAssignments();
+  } catch (e) {
+    showError(`Something went wrong: ${e.message}`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  ASSIGNMENT LIST
+// ═══════════════════════════════════════════════
+async function loadAssignments() {
+  try {
+    // Get all assignments assigned to this student
+    const { data: sa, error: e1 } = await sb.from('student_assignments')
+      .select('assignment_id, assignments(*)')
+      .eq('student_id', student.id);
+    if (e1) throw e1;
+
+    // Get submissions by this student
+    const { data: subs, error: e2 } = await sb.from('submissions')
+      .select('*').eq('student_id', student.id);
+    if (e2) throw e2;
+
+    const subMap = {};
+    (subs || []).forEach(s => { subMap[s.assignment_id] = s; });
+
+    // Build merged list, sort by due_date ascending
+    myAsgns = (sa || [])
+      .map(row => ({ ...row.assignments, submission: subMap[row.assignment_id] || null }))
+      .sort((a, b) => {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return a.due_date.localeCompare(b.due_date);
+      });
+
+    renderList();
+    showScreen('s-list');
+  } catch (e) {
+    showError(`Could not load assignments: ${e.message}`);
+  }
+}
+
+function renderList() {
+  const el = document.getElementById('assignments-list');
+  const sub = document.getElementById('list-sub');
+
+  const total   = myAsgns.length;
+  const done    = myAsgns.filter(a => a.submission).length;
+  sub.textContent = total
+    ? `${done} of ${total} completed`
+    : 'No assignments yet — check back later.';
+
+  if (!total) { el.innerHTML = ''; return; }
+
+  el.innerHTML = myAsgns.map(a => {
+    const s = a.submission;
+    let badgeHtml = '', clickable = true;
+
+    if (!s) {
+      badgeHtml = '<span class="badge badge-new">New</span>';
+    } else if (s.status === 'graded') {
+      badgeHtml = `<span class="badge badge-graded">Graded</span>
+                   <span class="badge badge-score" style="margin-left:5px">${s.score}/${s.max_score}</span>`;
+    } else {
+      badgeHtml = '<span class="badge badge-submitted">Submitted</span>';
+      clickable = false; // submitted but not graded — show result on click still
+    }
+
+    return `
+      <div class="asgn-card ${s ? 'done' : ''}" onclick="openAssignment('${a.id}')">
+        <div class="asgn-info">
+          <div class="asgn-title">${esc(a.title)}</div>
+          ${a.due_date ? `<div class="asgn-due">${fmt(a.due_date)}</div>` : ''}
+          ${a.description ? `<div class="asgn-due" style="margin-top:2px">${esc(a.description)}</div>` : ''}
+        </div>
+        <div class="asgn-status">${badgeHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  OPEN & TAKE ASSIGNMENT
+// ═══════════════════════════════════════════════
+async function openAssignment(id) {
+  openAsgn = myAsgns.find(a => a.id === id);
+  if (!openAsgn) return;
+
+  showScreen('s-loading');
+
+  try {
+    // Load questions
+    const { data: items, error: e1 } = await sb.from('items')
+      .select('*').eq('assignment_id', id).order('order_index');
+    if (e1) throw e1;
+    openItems = items || [];
+
+    // Get submission if exists
+    openSub = openAsgn.submission || null;
+
+    // Render
+    document.getElementById('take-title').textContent = openAsgn.title;
+    document.getElementById('take-due').textContent   = openAsgn.due_date ? fmt(openAsgn.due_date) : '';
+
+    if (openSub) {
+      renderResult();
+    } else {
+      renderTaking();
+    }
+    showScreen('s-take');
+  } catch (e) {
+    showError(`Could not load assignment: ${e.message}`);
+  }
+}
+
+function backToList() {
+  openAsgn  = null;
+  openItems = [];
+  openSub   = null;
+  showScreen('s-list');
+  loadAssignments(); // refresh statuses
+}
+
+// ── RENDER QUESTIONS FORM ──────────────────────
+function renderTaking() {
+  const el = document.getElementById('take-body');
+
+  if (!openItems.length) {
+    el.innerHTML = '<div style="color:var(--muted);padding:20px 0">No questions in this assignment yet.</div>';
+    return;
+  }
+
+  const questions = openItems.map((item, i) => questionHtml(item, i)).join('');
+
+  el.innerHTML = `
+    ${questions}
+    <div class="submit-area">
+      <button class="btn pri full" id="submit-btn" onclick="submitAssignment()">Submit Assignment</button>
+    </div>`;
+}
+
+function questionHtml(item, i) {
+  let body = '';
+
+  if (item.type === 'multiple_choice') {
+    const opts = (item.options || []).filter(o => o && o.toString().trim());
+    body = `
+      <div class="mc-options">
+        ${opts.map((opt, j) => `
+          <label class="mc-opt" id="opt-${item.id}-${j}" onclick="selectMC('${item.id}',${j})">
+            <input type="radio" name="mc-${item.id}" value="${j}" style="pointer-events:none"/>
+            <span class="mc-opt-label">${esc(opt)}</span>
+          </label>`).join('')}
+      </div>`;
+
+  } else if (item.type === 'fill_blank') {
+    // Replace ___ with an inline input
+    const parts = item.question.split('___');
+    let sentence = '';
+    parts.forEach((part, j) => {
+      sentence += esc(part);
+      if (j < parts.length - 1) {
+        sentence += `<input type="text" class="fill-inp" id="fill-${item.id}"
+          placeholder="…" autocomplete="off" autocorrect="off" spellcheck="false"/>`;
+      }
+    });
+    body = `<div class="fill-sentence">${sentence}</div>`;
+
+  } else {
+    // Short answer
+    body = `<textarea id="sa-${item.id}" placeholder="Write your answer here…"></textarea>`;
+  }
+
+  // For fill_blank, question text is already in the sentence; for others show separately
+  const showQText = item.type !== 'fill_blank';
+
+  return `
+    <div class="question-block">
+      <div class="q-num">Question ${i + 1} of ${openItems.length}</div>
+      ${showQText ? `<div class="q-text">${esc(item.question)}</div>` : ''}
+      ${body}
+    </div>`;
+}
+
+function selectMC(itemId, optIdx) {
+  // Visual selection
+  document.querySelectorAll(`[id^="opt-${itemId}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`opt-${itemId}-${optIdx}`)?.classList.add('selected');
+  // Set radio
+  const radio = document.querySelector(`input[name="mc-${itemId}"][value="${optIdx}"]`);
+  if (radio) radio.checked = true;
+}
+
+// ── COLLECT ANSWERS ────────────────────────────
+function collectAnswers() {
+  const answers = {};
+  let missing = false;
+
+  openItems.forEach(item => {
+    if (item.type === 'multiple_choice') {
+      const radio = document.querySelector(`input[name="mc-${item.id}"]:checked`);
+      if (radio) {
+        answers[item.id] = radio.value; // index as string
+      } else {
+        answers[item.id] = '';
+        missing = true;
+      }
+    } else if (item.type === 'fill_blank') {
+      answers[item.id] = document.getElementById(`fill-${item.id}`)?.value.trim() || '';
+      if (!answers[item.id]) missing = true;
+    } else {
+      answers[item.id] = document.getElementById(`sa-${item.id}`)?.value.trim() || '';
+      // short answer blank is allowed
+    }
+  });
+
+  return { answers, missing };
+}
+
+// ── AUTO-SCORE ────────────────────────────────
+function autoScore(answers) {
+  let score = 0, maxScore = 0;
+  openItems.forEach(item => {
+    if (item.type === 'short_answer') { maxScore++; return; } // counted but not auto-scored
+    maxScore++;
+    const given   = String(answers[item.id] || '').trim().toLowerCase();
+    const correct = String(item.correct_answer || '').trim().toLowerCase();
+    if (given === correct) score++;
+  });
+  return { score, maxScore };
+}
+
+// ── SUBMIT ────────────────────────────────────
+async function submitAssignment() {
+  const { answers, missing } = collectAnswers();
+  const mcOrFill = openItems.filter(i => i.type !== 'short_answer');
+
+  if (missing && mcOrFill.length > 0) {
+    const proceed = confirm('You have unanswered questions. Submit anyway?');
+    if (!proceed) return;
+  }
+
+  const { score, maxScore } = autoScore(answers);
+  const btn = document.getElementById('submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+  try {
+    const { data, error } = await sb.from('submissions').insert({
+      student_id:    student.id,
+      assignment_id: openAsgn.id,
+      answers,
+      score,
+      max_score: maxScore,
+      status: 'submitted',
+    }).select().single();
+    if (error) throw error;
+
+    openSub = data;
+    renderResult();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Assignment'; }
+    alert(`Could not submit: ${e.message}`);
+  }
+}
+
+// ── RENDER RESULT (submitted or graded) ──────
+function renderResult() {
+  const el  = document.getElementById('take-body');
+  const sub = openSub;
+
+  if (sub.status === 'graded') {
+    // Show full result with score and feedback
+    let html = `
+      <div class="result-box">
+        <div class="result-label">Your Score</div>
+        <div class="result-score">${sub.score} / ${sub.max_score}</div>
+        ${sub.feedback ? `
+          <div class="result-feedback">
+            <div class="result-feedback-label">Teacher's feedback</div>
+            ${esc(sub.feedback)}
+          </div>` : ''}
+      </div>`;
+
+    // Show answers with correct/wrong indicators
+    if (openItems.length) {
+      html += '<div style="margin-top:4px">';
+      const answers = sub.answers || {};
+
+      openItems.forEach((item, i) => {
+        let reviewHtml = '';
+        const studentAns = answers[item.id] || '';
+
+        if (item.type === 'multiple_choice') {
+          const opts      = item.options || [];
+          const givenIdx  = parseInt(studentAns);
+          const corrIdx   = parseInt(item.correct_answer);
+          const isCorrect = givenIdx === corrIdx;
+          const givenTxt  = opts[givenIdx] ?? '—';
+          const corrTxt   = opts[corrIdx]  ?? '—';
+
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isCorrect ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isCorrect ? '✓' : '✗'} Your answer: ${esc(givenTxt)}
+              </div>
+              ${!isCorrect ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(corrTxt)}</div>` : ''}
+            </div>`;
+
+        } else if (item.type === 'fill_blank') {
+          const given   = String(studentAns).trim().toLowerCase();
+          const correct = String(item.correct_answer || '').trim().toLowerCase();
+          const isOk    = given === correct;
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isOk ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isOk ? '✓' : '✗'} Your answer: ${esc(studentAns) || '(blank)'}
+              </div>
+              ${!isOk ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(item.correct_answer)}</div>` : ''}
+            </div>`;
+        } else {
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px;color:var(--muted)">
+              Your answer: ${esc(studentAns) || '(no answer)'}
+            </div>`;
+        }
+
+        html += `
+          <div class="question-block" style="cursor:default">
+            <div class="q-num">Question ${i+1}</div>
+            <div class="q-text">${esc(item.type === 'fill_blank' ? item.question.replace('___','____') : item.question)}</div>
+            ${reviewHtml}
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+
+  } else {
+    // Submitted but not graded yet
+    el.innerHTML = `
+      <div class="success-banner">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Submitted!</div>
+        <div class="success-sub">Your teacher will grade this soon. Check back later.</div>
+      </div>
+      <div style="text-align:center">
+        <button class="btn" onclick="backToList()">← Back to Assignments</button>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PROGRESS TEST — Aida's end-of-course test
+//  Activate by adding ?test=progress to any link
+// ═══════════════════════════════════════════════
+
+const PT_SECTIONS = [
+  {
+    id:'vocab', label:'Section 1 — Vocabulary',
+    instructions:'Choose the correct word, match pairs, or fill in the missing word.',
+    questions:[
+      { id:'v1', type:'mc',
+        q:'What does "open-minded" mean?',
+        opts:['Willing to consider new ideas','Feeling embarrassed','Being in a hurry','Having a beard'], ans:0 },
+      { id:'v2', type:'mc',
+        q:'Choose the correct word: "Can you ___ me some money until Friday?" — I\'ll pay you back.',
+        opts:['borrow','lend','rescue','depend'], ans:1 },
+      { id:'v3', type:'fill',
+        q:'Complete the phrase: "She is ___ dancing — she practises five times a week." (crazy about / interested at)',
+        ans:'crazy about' },
+      { id:'v4', type:'mc',
+        q:'Which word means to move very quietly so no one hears you?',
+        opts:['shine','creep','rescue','rush'], ans:1 },
+      { id:'v5', type:'match',
+        q:'Match each word to its definition.',
+        pairs:[
+          ['tiny','very small'],
+          ['reunited','brought back together after time apart'],
+          ['polluted','made dirty or harmful by chemicals'],
+          ['passionate','having very strong feelings about something'],
+        ] },
+      { id:'v6', type:'fill',
+        q:'Fill in: "We should ___ in touch — let\'s message each other every week!" (keep / turn / come)',
+        ans:'keep' },
+      { id:'v7', type:'mc',
+        q:'"Apart from that, she is very kind." What does "apart from" mean here?',
+        opts:['because of','except for / besides','instead of','similar to'], ans:1 },
+      { id:'v8', type:'mc',
+        q:'Choose the correct shop for each item.\n"I need stamps and a newspaper."',
+        opts:["delicatessen","chemist's","newsagent's","off-licence"], ans:2 },
+      { id:'v9', type:'fill',
+        q:'Fill in: "She felt ___ when she fell over in front of everyone." (embarrassed / pleased / polluted)',
+        ans:'embarrassed' },
+      { id:'v10', type:'match',
+        q:'Match each shop to what you buy there.',
+        pairs:[
+          ["chemist's",'medicine and health products'],
+          ["newsagent's",'newspapers and magazines'],
+          ["delicatessen",'special or foreign foods'],
+          ["off-licence",'alcohol to take away'],
+        ] },
+      { id:'v11', type:'mc',
+        q:'"She ___ over and dropped everything." Which irregular past is correct?',
+        opts:['felt','fell','falled','fallen'], ans:1 },
+      { id:'v12', type:'fill',
+        q:'Fill in: "The swimmer was ___ from the rough sea by the lifeguard." (rescued / fell / crept)',
+        ans:'rescued' },
+      { id:'v13', type:'mc',
+        q:'Which sentence uses "lend" correctly?',
+        opts:['Can I lend your pen?','Can you lend me your pen?','I will lend a book from the library.','She lent money from the bank.'], ans:1 },
+      { id:'v14', type:'fill',
+        q:'Complete: "I often ___ for a run on Sunday mornings to clear my head." (go / come / turn)',
+        ans:'go' },
+      { id:'v15', type:'mc',
+        q:'"Feathers" cover the body of which animal?',
+        opts:['fish','birds','reptiles','insects'], ans:1 },
+    ]
+  },
+  {
+    id:'grammar', label:'Section 2 — Grammar',
+    instructions:'Choose the correct form, fill in the blank, or rewrite the sentence.',
+    questions:[
+      { id:'g1', type:'mc',
+        q:'Choose the correct form: "I remember ___ her at the party last summer."',
+        opts:['meet','to meet','meeting','met'], ans:2 },
+      { id:'g2', type:'mc',
+        q:'Which sentence uses a STATE VERB correctly?',
+        opts:['I am knowing the answer.','She is believing you.','He knows the answer.','They are preferring tea.'], ans:2 },
+      { id:'g3', type:'fill',
+        q:'Fill in the correct quantifier: "There isn\'t ___ milk left — can you buy some?" (much / many / a few)',
+        ans:'much' },
+      { id:'g4', type:'rewrite',
+        q:'Rewrite this sentence using the correct connector (although / however / so):\n"The weather was terrible. We still went for a walk."',
+        hint:'Use "although" to join them into one sentence.',
+        ans:'Although the weather was terrible, we still went for a walk.' },
+      { id:'g5', type:'mc',
+        q:'Choose the correct article: "___ apple a day keeps the doctor away."',
+        opts:['A','An','The','—'], ans:1 },
+      { id:'g6', type:'fill',
+        q:'Fill in: "Is there ___ sugar? I\'d like a little in my tea." (some / any / no)',
+        ans:'any' },
+      { id:'g7', type:'mc',
+        q:'Which time preposition is correct? "I was born ___ 1999."',
+        opts:['at','on','in','for'], ans:2 },
+      { id:'g8', type:'mc',
+        q:'Choose the sentence with a correct ADVERB:',
+        opts:['She sings beautiful.','She sings beautifully.','She sings beauty.','She is a beautifully singer.'], ans:1 },
+      { id:'g9', type:'fill',
+        q:'Fill in the correct container: "a ___ of bread" — the long, whole kind. (loaf / packet / slice / bunch)',
+        ans:'loaf' },
+      { id:'g10', type:'mc',
+        q:'Which sentence uses the -ED adjective correctly?',
+        opts:['The movie was bored — I was boring.','The movie was very boring — I was bored.','I am very interest in this topic.','She felt embarrassing.'], ans:1 },
+      { id:'g11', type:'fill',
+        q:'Fill in with the correct -ED/-ING form: "He was ___ by the news — nobody expected it." (surprised / surprising)',
+        ans:'surprised' },
+      { id:'g12', type:'mc',
+        q:'"___ you finish your homework, you can watch TV." Choose the connector.',
+        opts:['Although','However','So','Since'], ans:2 },
+      { id:'g13', type:'rewrite',
+        q:'Rewrite using the correct quantifier (a little / a few):\n"I have ___ friends in this city — maybe three or four."',
+        hint:'Use "a few" for countable nouns (people, things).',
+        ans:'I have a few friends in this city.' },
+      { id:'g14', type:'fill',
+        q:'Fill in: "She bought a ___ of grapes at the market." (bunch / loaf / packet / box)',
+        ans:'bunch' },
+      { id:'g15', type:'mc',
+        q:'Choose the correct sentence with "some / any / every / no + body/thing/where":',
+        opts:['"I don\'t have some friends here."','"She has any idea."','"There is nobody in the room."','"He went anywhere."'], ans:2 },
+      { id:'g16', type:'mc',
+        q:'"She ___ to school every day." Which form is correct? (state/habit)',
+        opts:['is walking','walks','has walked','was walking'], ans:1 },
+      { id:'g17', type:'fill',
+        q:'Fill in with the correct irregular past: "We ___ a great film last night." (see)',
+        ans:'saw' },
+      { id:'g18', type:'mc',
+        q:'Choose the correct sentence with time prepositions:',
+        opts:['I will see you on the morning.','She was born in June.','We met at Monday.','He works in the weekend.'], ans:1 },
+    ]
+  },
+  {
+    id:'reading', label:'Section 3 — Reading',
+    instructions:'Read the text carefully, then answer the questions below.',
+    passage:`My name is Lena and I live in a small but lively neighbourhood on the first floor of an apartment building. It's a bit polluted because of the traffic, but apart from that, it's a great place to live. There's a chemist's just around the corner, a delicatessen where I buy a loaf of bread every morning, and a newsagent's where I pick up a newspaper on Sundays.\n\nI usually have a lie in on weekends — I don't get up until nine or ten. Then I go for a walk along the sea shore, which is only a fifteen-minute walk away. I'm crazy about photography, so I always bring my camera. I'm also interested in languages — I've been learning English for three years and I'm nearly fluent now.\n\nMy neighbour is a kind, open-minded woman called Sara. She rescued a tiny kitten last month — it got lost near the shore and was creeping under the cars. Sara is passionate about animals and continually volunteers at the local shelter.`,
+    questions:[
+      { id:'r1', type:'mc',
+        q:'Where does Lena live?',
+        opts:['In a house with a garden','On the first floor of an apartment building','By the sea shore in a cottage','Above the delicatessen'], ans:1 },
+      { id:'r2', type:'mc',
+        q:'What does Lena buy at the delicatessen every morning?',
+        opts:['A newspaper','A bunch of grapes','A loaf of bread','A packet of biscuits'], ans:2 },
+      { id:'r3', type:'fill',
+        q:'According to the text, what time does Lena usually get up on weekends? Write ONE word or phrase.',
+        ans:'nine or ten' },
+      { id:'r4', type:'mc',
+        q:'What is Lena "crazy about"?',
+        opts:['Languages','Photography','Animals','Walking'], ans:1 },
+      { id:'r5', type:'tf',
+        q:'True or False? Sara found the kitten in the chemist\'s.',
+        ans:'False' },
+      { id:'r6', type:'tf',
+        q:'True or False? The neighbourhood is described as being polluted because of traffic.',
+        ans:'True' },
+      { id:'r7', type:'fill',
+        q:'Find ONE word in the text that means "without stopping, all the time".',
+        ans:'continually' },
+      { id:'r8', type:'mc',
+        q:'Which word best describes Sara\'s personality based on the text?',
+        opts:['Shy and quiet','Kind and passionate','Embarrassed and tiny','Urgent and polluted'], ans:1 },
+      { id:'r9', type:'short',
+        q:'In your own words, why does Lena bring a camera when she goes for a walk? (1–2 sentences)' },
+      { id:'r10', type:'short',
+        q:'What TWO hobbies or interests does Lena mention? Write them in your own words.' },
+    ]
+  },
+  {
+    id:'writing', label:'Section 4 — Writing',
+    instructions:'Write full, detailed answers. Pay attention to grammar, vocabulary, and connectors.',
+    questions:[
+      { id:'w1', type:'writing',
+        q:'Describe yourself in 6–8 sentences.\n\nInclude ALL of the following:\n• Where you live and what floor\n• What you look like (hair, any features)\n• Your personality (use at least 2 adjectives from the course)\n• TWO things you are crazy about or interested in\n• What you do on weekends (use: have a lie in / go for a walk or run)\n\nUse at least 5 vocabulary words from the course.',
+        minWords:80 },
+      { id:'w2', type:'writing',
+        q:'Write a paragraph (6–8 sentences) about your neighbourhood or a place you like.\n\nYou MUST include:\n• "although" used to join two contrasting ideas\n• "however" at the start of a sentence\n• "so" to show a result\n• At least TWO specific shop types from the course (chemist\'s, newsagent\'s, delicatessen, off-licence, clothes shop)\n• One container expression (a loaf of / a bunch of / a packet of / a bottle of / a pair of)',
+        minWords:80 },
+      { id:'w3', type:'writing',
+        q:'A friend who lives abroad asks you:\n"What do you do on a typical weekend? Do you ever go out or do you prefer staying in?"\n\nWrite a detailed reply (7–10 sentences). You MUST use:\n• "have a lie in"\n• "go for a walk / run"\n• "it depends on…"\n• "come back / return"\n• "a bit"\n• ONE quantifier: (much / many / a few / a little) in a correct sentence\n• ONE connector: (although / however / so)',
+        minWords:100 },
+    ]
+  },
+  {
+    id:'speaking', label:'Section 5 — Speaking',
+    instructions:'Record a voice message for each task. Aim for the suggested time. Send recordings to your teacher via WhatsApp or Telegram after submitting.',
+    questions:[
+      { id:'s1', type:'speaking',
+        q:'Talk about your daily routine and weekend habits.\n\nCover ALL of these points:\n• What time you usually get up — do you have a lie in on weekends?\n• Whether you go for a walk or run — where, how often\n• Something you are crazy about or interested in — describe it in detail\n• How your weekend plans depend on the weather or other people\n• ONE thing that is different about your weekdays vs weekends',
+        tip:'Useful language: "I usually…", "It depends on…", "I\'m crazy about…", "Apart from that…", "On weekdays I tend to…", "However, on weekends…"',
+        duration:'90 seconds' },
+      { id:'s2', type:'speaking',
+        q:'Describe TWO people — one family member and one friend.\n\nFor EACH person say:\n• What they look like in detail (hair colour/style, beard, height, any features)\n• Their personality — use at least 2 adjectives (open-minded, kind, passionate, crazy about something)\n• One thing they are passionate about and how they show it\n• Something surprising or interesting about them\n\nImagine you are showing photos of them.',
+        tip:'Useful language: "This is a photo of…", "She/He has… hair", "Apart from that…", "A bit…", "She is passionate about… and she continually…", "What I find interesting is that…"',
+        duration:'90 seconds' },
+      { id:'s3', type:'speaking',
+        q:'You are talking to an English-speaking friend who is visiting your city for the first time.\n\nTell them:\n• What shops are nearby and what you can buy there (use specific shop names)\n• A place you would recommend and why\n• What you usually do in the neighbourhood — describe a typical walk\n• One thing that is a bit polluted or not perfect, but why you still like it\n• Invite them to do something specific with you (go for a walk, buy something, etc.)',
+        tip:'Useful language: "There\'s a… just around the corner", "I\'d recommend…", "Although it\'s a bit…, it\'s still great because…", "Why don\'t we…", "You can buy a loaf of / a packet of…"',
+        duration:'90 seconds' },
+    ]
+  }
+];
+
+
+// State
+let ptAnswers   = {};    // id → value
+let ptRecorders = {};    // id → { blob, url }
+let ptSubmitted = false;
+let ptTotalAuto = 0;
+let ptTotalQ    = 0;
+
+const AUTO_TYPES = new Set(['mc','fill','tf','match','rewrite']);
+
+function isAutoScored(q) { return AUTO_TYPES.has(q.type); }
+
+function initProgressTest() {
+  PT_SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      ptTotalQ++;
+      if (isAutoScored(q)) ptTotalAuto++;
+    });
+  });
+  renderProgressTest();
+  showScreen('s-progress');
+}
+
+function renderProgressTest() {
+  const body = document.getElementById('pt-body');
+  let html = '';
+  let qNum = 0;
+
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section">`;
+    html += `<div class="pt-section-label">${esc(sec.label)}</div>`;
+    if (sec.instructions) html += `<div class="pt-instr">${esc(sec.instructions)}</div>`;
+
+    // Reading passage
+    if (sec.passage) {
+      html += `<div class="pt-passage">${esc(sec.passage).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</div>`;
+    }
+
+    sec.questions.forEach(q => {
+      qNum++;
+      html += `<div class="pt-q" id="ptq-${q.id}">`;
+      html += `<div class="pt-q-num">Q${qNum}</div>`;
+
+      if (q.type === 'mc') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div><div class="pt-opts">`;
+        q.opts.forEach((opt, j) => {
+          html += `<div class="pt-opt" id="ptopt-${q.id}-${j}" onclick="ptSelectMC('${q.id}',${j})">${esc(opt)}</div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'tf') {
+        html += `<div class="pt-q-text">${esc(q.q)}</div><div class="pt-opts">`;
+        ['True','False'].forEach((opt, j) => {
+          html += `<div class="pt-opt" id="ptopt-${q.id}-${j}" onclick="ptSelectTF('${q.id}','${opt}')">${esc(opt)}</div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'fill') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+        html += `<input type="text" class="pt-fill fill-inp" id="ptfill-${q.id}" placeholder="Your answer…" oninput="ptSaveText('${q.id}',this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/>`;
+
+      } else if (q.type === 'rewrite') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+        if (q.hint) html += `<div class="pt-hint">${esc(q.hint)}</div>`;
+        html += `<textarea class="pt-textarea" id="ptwrite-${q.id}" placeholder="Rewrite the sentence…" rows="2" oninput="ptSaveText('${q.id}',this.value)"></textarea>`;
+
+      } else if (q.type === 'match') {
+        html += `<div class="pt-q-text">${esc(q.q)}</div>`;
+        html += `<div class="pt-match-grid">`;
+        q.pairs.forEach((pair, i) => {
+          html += `<div class="pt-match-row">
+            <div class="pt-match-term">${esc(pair[0])}</div>
+            <div class="pt-match-arrow">→</div>
+            <select class="pt-match-sel" id="ptmatch-${q.id}-${i}" onchange="ptSaveMatch('${q.id}',${i},this.value)">
+              <option value="">— choose —</option>
+              ${q.pairs.map((p,k) => `<option value="${k}">${esc(p[1])}</option>`).join('')}
+            </select>
+          </div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'short') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+        html += `<textarea class="pt-textarea" id="ptwrite-${q.id}" placeholder="Write 1–2 sentences…" rows="3" oninput="ptSaveText('${q.id}',this.value)"></textarea>`;
+
+      } else if (q.type === 'writing') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+        if (q.minWords) html += `<div class="pt-hint">Aim for at least ${q.minWords} words.</div>`;
+        html += `<div class="pt-wordcount" id="ptwc-${q.id}">0 words</div>`;
+        html += `<textarea class="pt-textarea" id="ptwrite-${q.id}" placeholder="Write your answer here…" rows="7" oninput="ptSaveText('${q.id}',this.value);ptWordCount('${q.id}')"></textarea>`;
+
+      } else if (q.type === 'speaking') {
+        html += `<div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+        html += `<div class="pt-speaking-prompt">${esc(q.tip)}</div>`;
+        if (q.duration) html += `<div class="pt-hint">Target: ${esc(q.duration)}</div>`;
+        html += `<button class="pt-voice-btn" id="ptvoice-${q.id}" onclick="ptToggleRecording('${q.id}')">
+          <span class="pt-dot" id="ptdot-${q.id}"></span>
+          <span id="ptvoicelbl-${q.id}">Start recording</span>
+        </button>`;
+        html += `<div class="pt-audio-wrap" id="ptaudio-${q.id}"></div>`;
+        html += `<p class="pt-speaking-note">Send your recording to your teacher via WhatsApp or Telegram after submitting.</p>`;
+      }
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `<div class="pt-submit-area">
+    <button class="btn pri full" id="pt-submit-btn" onclick="ptSubmit()">Submit Progress Test</button>
+  </div>`;
+
+  body.innerHTML = html;
+  ptUpdateProgress();
+}
+
+function ptWordCount(id) {
+  const ta = document.getElementById(`ptwrite-${id}`);
+  const wc = document.getElementById(`ptwc-${id}`);
+  if (!ta || !wc) return;
+  const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+  wc.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+}
+
+function ptSelectMC(id, idx) {
+  if (ptSubmitted) return;
+  ptAnswers[id] = idx;
+  document.querySelectorAll(`[id^="ptopt-${id}-"]`).forEach(el => el.classList.remove('sel'));
+  document.getElementById(`ptopt-${id}-${idx}`)?.classList.add('sel');
+  ptUpdateProgress();
+}
+
+function ptSelectTF(id, val) {
+  if (ptSubmitted) return;
+  ptAnswers[id] = val;
+  ['True','False'].forEach((opt, j) => {
+    document.getElementById(`ptopt-${id}-${j}`)?.classList.toggle('sel', opt === val);
+  });
+  ptUpdateProgress();
+}
+
+function ptSaveMatch(id, rowIdx, val) {
+  if (!ptAnswers[id]) ptAnswers[id] = {};
+  ptAnswers[id][rowIdx] = parseInt(val);
+  ptUpdateProgress();
+}
+
+function ptSaveText(id, val) {
+  ptAnswers[id] = val;
+  ptUpdateProgress();
+}
+
+function ptUpdateProgress() {
+  const answered = Object.keys(ptAnswers).filter(k => {
+    const v = ptAnswers[k];
+    if (v === '' || v === null || v === undefined) return false;
+    if (typeof v === 'object') return Object.keys(v).length > 0;
+    return true;
+  }).length;
+  const pct = ptTotalQ > 0 ? Math.round(answered / ptTotalQ * 100) : 0;
+  const bar = document.getElementById('pt-prog');
+  if (bar) bar.style.width = pct + '%';
+}
+
+// ── VOICE RECORDING ──────────────────────────────
+async function ptToggleRecording(id) {
+  const rec = ptRecorders[id];
+  if (rec && rec.active) { rec.mediaRecorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    ptRecorders[id] = { mediaRecorder: mr, active: true };
+
+    const btn = document.getElementById(`ptvoice-${id}`);
+    const dot = document.getElementById(`ptdot-${id}`);
+    const lbl = document.getElementById(`ptvoicelbl-${id}`);
+    btn.classList.add('recording');
+    dot.classList.add('rec');
+    lbl.textContent = 'Recording… tap to stop';
+
+    mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    mr.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      ptRecorders[id].active = false;
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url  = URL.createObjectURL(blob);
+      ptAnswers[id] = 'recorded';
+      ptRecorders[id].blob = blob;
+      ptRecorders[id].url  = url;
+      btn.classList.remove('recording');
+      dot.classList.remove('rec');
+      lbl.textContent = 'Re-record';
+      document.getElementById(`ptaudio-${id}`).innerHTML =
+        `<audio controls src="${url}" style="width:100%;margin-top:6px;height:36px"></audio>`;
+      ptUpdateProgress();
+    };
+    mr.start();
+  } catch (e) {
+    alert('Microphone access denied. Please allow microphone access and try again.');
+  }
+}
+
+// ── AUTO-SCORING HELPER ───────────────────────────
+function ptAutoScore(q) {
+  const ans = ptAnswers[q.id];
+  if (q.type === 'mc') {
+    return { scored: true, ok: ans === q.ans };
+  } else if (q.type === 'fill' || q.type === 'rewrite') {
+    const given   = String(ans || '').trim().toLowerCase().replace(/[.!?]$/, '');
+    const correct = String(q.ans || '').trim().toLowerCase().replace(/[.!?]$/, '');
+    return { scored: true, ok: given === correct };
+  } else if (q.type === 'tf') {
+    return { scored: true, ok: String(ans).toLowerCase() === String(q.ans).toLowerCase() };
+  } else if (q.type === 'match') {
+    if (!ans || typeof ans !== 'object') return { scored: true, ok: false };
+    const allOk = q.pairs.every((_, i) => parseInt(ans[i]) === i);
+    return { scored: true, ok: allOk };
+  }
+  return { scored: false, ok: false };
+}
+
+// ── SUBMIT ───────────────────────────────────────
+function ptSubmit() {
+  let missing = 0;
+  PT_SECTIONS.forEach(sec => sec.questions.forEach(q => {
+    if (!isAutoScored(q)) return;
+    const v = ptAnswers[q.id];
+    if (v === undefined || v === '' || v === null) missing++;
+    if (q.type === 'match' && (!v || Object.keys(v).length < q.pairs.length)) missing++;
+  }));
+  if (missing > 0 && !confirm(`You have ${missing} unanswered question(s). Submit anyway?`)) return;
+  ptSubmitted = true;
+  document.getElementById('pt-submit-btn').disabled = true;
+  ptShowResults();
+}
+
+function ptShowResults() {
+  let score = 0, maxAuto = 0;
+  const allQs = PT_SECTIONS.flatMap(s => s.questions);
+  allQs.forEach(q => {
+    const { scored, ok } = ptAutoScore(q);
+    if (scored) { maxAuto++; if (ok) score++; }
+  });
+
+  const pct = maxAuto > 0 ? Math.round(score / maxAuto * 100) : 0;
+  const msg = pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good job! A few things to review.' : 'Keep practising — you can do it!';
+
+  const body = document.getElementById('pt-body');
+  let html = `
+    <div class="pt-score-box">
+      <div class="pt-score-num">${score}/${maxAuto}</div>
+      <div class="pt-score-label">Auto-scored (vocabulary, grammar &amp; reading)</div>
+      <div class="pt-score-msg">${msg}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Writing &amp; speaking will be graded by your teacher.</div>
+    </div>`;
+
+  let qNum = 0;
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section"><div class="pt-section-label">${esc(sec.label)}</div>`;
+    sec.questions.forEach(q => {
+      qNum++;
+      html += `<div class="pt-review-q">`;
+      html += `<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Q${qNum}</div>`;
+      html += `<div style="font-size:14px;font-weight:500;margin-bottom:6px;line-height:1.5">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+
+      const { scored, ok } = ptAutoScore(q);
+
+      if (q.type === 'mc') {
+        const given = ptAnswers[q.id];
+        html += `<div class="${ok?'pt-correct-mark':'pt-wrong-mark'}">${ok?'✓':'✗'} Your answer: ${given !== undefined ? esc(q.opts[given]) : '(not answered)'}</div>`;
+        if (!ok) html += `<div class="pt-correct-ans">Correct: ${esc(q.opts[q.ans])}</div>`;
+
+      } else if (q.type === 'tf') {
+        const given = ptAnswers[q.id] || '(not answered)';
+        html += `<div class="${ok?'pt-correct-mark':'pt-wrong-mark'}">${ok?'✓':'✗'} Your answer: ${esc(given)}</div>`;
+        if (!ok) html += `<div class="pt-correct-ans">Correct: ${esc(q.ans)}</div>`;
+
+      } else if (q.type === 'fill' || q.type === 'rewrite') {
+        const given = ptAnswers[q.id] || '';
+        html += `<div class="${ok?'pt-correct-mark':'pt-wrong-mark'}">${ok?'✓':'✗'} Your answer: ${esc(given) || '(blank)'}</div>`;
+        if (!ok) html += `<div class="pt-correct-ans">Correct: ${esc(q.ans)}</div>`;
+
+      } else if (q.type === 'match') {
+        const ans = ptAnswers[q.id] || {};
+        q.pairs.forEach((pair, i) => {
+          const chosen = parseInt(ans[i]);
+          const isOk   = chosen === i;
+          const chosenLabel = !isNaN(chosen) ? q.pairs[chosen][1] : '(not chosen)';
+          html += `<div class="${isOk?'pt-correct-mark':'pt-wrong-mark'}" style="margin-top:4px">${isOk?'✓':'✗'} ${esc(pair[0])} → ${esc(chosenLabel)}</div>`;
+          if (!isOk) html += `<div class="pt-correct-ans" style="margin-left:16px">Correct: ${esc(pair[1])}</div>`;
+        });
+
+      } else if (q.type === 'short' || q.type === 'writing') {
+        const given = ptAnswers[q.id] || '';
+        html += `<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap;margin-top:4px;padding:8px 12px;background:var(--surface2);border-radius:var(--rs)">${esc(given)||'(no answer)'}</div>`;
+        html += `<div style="font-size:12px;color:var(--cyan);margin-top:6px">Awaiting teacher feedback</div>`;
+
+      } else if (q.type === 'speaking') {
+        const rec = ptRecorders[q.id];
+        if (rec && rec.url) {
+          html += `<audio controls src="${rec.url}" style="width:100%;height:36px;margin-top:4px"></audio>`;
+          html += `<div style="font-size:12px;color:var(--cyan);margin-top:6px">Send this recording to your teacher</div>`;
+        } else {
+          html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">No recording made</div>`;
+        }
+      }
+
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<div style="text-align:center;padding:8px 0 32px">
+    <button class="btn" onclick="ptRestart()">← Retake test</button>
+  </div>`;
+
+  body.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function ptRestart() {
+  ptAnswers   = {};
+  ptRecorders = {};
+  ptSubmitted = false;
+  ptTotalQ    = 0;
+  ptTotalAuto = 0;
+  initProgressTest();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
