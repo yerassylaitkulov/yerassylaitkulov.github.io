@@ -122,6 +122,49 @@ textarea{resize:vertical;min-height:90px}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── PROGRESS TEST ── */
+.pt-hero{text-align:center;padding:32px 0 24px}
+.pt-hero-title{font-size:24px;font-weight:700;margin-bottom:6px}
+.pt-hero-sub{font-size:14px;color:var(--muted)}
+.pt-hero-badge{display:inline-block;background:var(--cyan-bg);color:var(--cyan);font-size:12px;font-weight:600;padding:4px 14px;border-radius:99px;margin-bottom:14px;letter-spacing:.04em}
+.pt-section{margin-bottom:28px}
+.pt-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pt-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.pt-q-num{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:5px}
+.pt-q-text{font-size:15px;font-weight:500;line-height:1.55;margin-bottom:12px}
+.pt-q-text em{font-style:italic;color:var(--muted);font-weight:400;font-size:14px}
+.pt-opts{display:flex;flex-direction:column;gap:7px}
+.pt-opt{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none;font-size:14px;color:var(--ink)}
+.pt-opt:hover{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.sel{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.correct{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.pt-opt.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.pt-fill{width:100%;margin-top:4px}
+.pt-textarea{width:100%;margin-top:4px;min-height:72px}
+.pt-fill-inline{display:inline-block;width:auto;min-width:110px;max-width:180px;padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;border-radius:0;background:transparent;color:var(--ink);font-size:15px;outline:none;vertical-align:middle;font-family:inherit}
+.pt-fill-inline:focus{background:rgba(6,182,212,.06)}
+.pt-speaking-prompt{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:14px;color:var(--ink);line-height:1.6;margin-bottom:10px}
+.pt-speaking-note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.pt-voice-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--ink);transition:all .12s;font-family:inherit}
+.pt-voice-btn:hover{border-color:var(--cyan)}
+.pt-voice-btn.recording{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.pt-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.pt-dot.rec{background:var(--red);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pt-audio-wrap{margin-top:8px}
+.pt-audio-wrap audio{width:100%;height:36px}
+.pt-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.pt-progress-fill{height:4px;background:var(--cyan);border-radius:2px;transition:width .4s}
+.pt-score-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:20px}
+.pt-score-num{font-size:48px;font-weight:700;color:var(--cyan)}
+.pt-score-label{font-size:14px;color:var(--muted);margin-top:4px}
+.pt-score-msg{font-size:15px;color:var(--ink);margin-top:12px;font-weight:500}
+.pt-review-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.pt-correct-mark{color:var(--green);font-size:13px;margin-top:6px}
+.pt-wrong-mark{color:var(--red);font-size:13px;margin-top:6px}
+.pt-correct-ans{color:var(--muted);font-size:12px;margin-top:3px}
+.pt-submit-area{padding:4px 0 32px;display:flex;flex-direction:column;gap:10px}
 </style>
 </head>
 <body>
@@ -158,6 +201,17 @@ textarea{resize:vertical;min-height:90px}
       <div id="assignments-list"></div>
     </div>
 
+    <!-- Progress test screen -->
+    <div class="screen" id="s-progress">
+      <div class="pt-hero">
+        <div class="pt-hero-badge">End-of-course progress test</div>
+        <div class="pt-hero-title">Aida's Final Review</div>
+        <div class="pt-hero-sub">Vocabulary · Grammar · Writing · Speaking</div>
+      </div>
+      <div class="pt-progress-bar"><div class="pt-progress-fill" id="pt-prog" style="width:0%"></div></div>
+      <div id="pt-body"></div>
+    </div>
+
     <!-- Assignment taking screen -->
     <div class="screen" id="s-take">
       <div class="taking-hd">
@@ -178,7 +232,7 @@ textarea{resize:vertical;min-height:90px}
 //  CONFIGURATION — paste your Supabase values here
 // ═══════════════════════════════════════════════
 const SUPABASE_URL  = 'https://qqqjiwrfudcvsjcxeavd.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTMxODEwMCwiZXhwIjoyMDkwODk0MTAwfQ.O9iWi2OBKPay7LcC3X50eH2iYSjkRz9bH0Hz4aFnXX4'; 
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTgxMDAsImV4cCI6MjA5MDg5NDEwMH0.hvUN1MAP32eF-4sbjpQXRFWRyf3prsDjDGu_vzwvpyo';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -223,6 +277,13 @@ function showError(msg) {
 async function init() {
   const params = new URLSearchParams(location.search);
   const token  = params.get('t');
+
+  // Progress test mode — no login needed
+  if (params.get('test') === 'progress') {
+    document.getElementById('top-name').textContent = 'Aida';
+    initProgressTest();
+    return;
+  }
 
   if (!token) {
     showError('No homework link found. Ask your teacher for your private link.');
@@ -589,6 +650,436 @@ function renderResult() {
         <button class="btn" onclick="backToList()">← Back to Assignments</button>
       </div>`;
   }
+}
+
+// ═══════════════════════════════════════════════
+//  PROGRESS TEST — Aida's end-of-course test
+//  Activate by adding ?test=progress to any link
+// ═══════════════════════════════════════════════
+
+const PT_SECTIONS = [
+  {
+    id: 'vocab',
+    label: 'Section 1 — Vocabulary',
+    questions: [
+      {
+        id:'v1', type:'mc',
+        q:'What does "open-minded" mean?',
+        opts:['Willing to consider new ideas','Feeling embarrassed','Being in a hurry','Having a beard'],
+        ans:0
+      },
+      {
+        id:'v2', type:'mc',
+        q:'Choose the correct word: "Can you ___ me some money until Friday?"',
+        opts:['borrow','lend','rescue','depend'],
+        ans:1
+      },
+      {
+        id:'v3', type:'mc',
+        q:'"She is ___ dancing." — Which preposition fits?',
+        opts:['interested at','crazy about','pleased of','keen in'],
+        ans:1
+      },
+      {
+        id:'v4', type:'fill',
+        q:'Complete the sentence: "I usually ___ for a walk in the morning." <em>(go / come / turn)</em>',
+        ans:'go'
+      },
+      {
+        id:'v5', type:'fill',
+        q:'What is the opposite of "reunited"? <em>(write one word)</em>',
+        ans:'separated'
+      },
+      {
+        id:'v6', type:'mc',
+        q:'Which word means "very small"?',
+        opts:['polluted','tiny','urgent','passionate'],
+        ans:1
+      },
+      {
+        id:'v7', type:'mc',
+        q:'"Keep in ___ touch" means to stay in contact.',
+        opts:['on','in','at','of'],
+        ans:1
+      },
+      {
+        id:'v8', type:'mc',
+        q:'Where would you buy medicine? At a ___.',
+        opts:["newsagent's","delicatessen","chemist's","clothes shop"],
+        ans:2
+      },
+      {
+        id:'v9', type:'fill',
+        q:'Fill in: "She felt ___ when she fell over in front of everyone." <em>(embarrassed / pleased / polluted)</em>',
+        ans:'embarrassed'
+      },
+      {
+        id:'v10', type:'mc',
+        q:'"Feathers" are found on which animal?',
+        opts:['fish','birds','cats','dogs'],
+        ans:1
+      },
+    ]
+  },
+  {
+    id: 'grammar',
+    label: 'Section 2 — Grammar',
+    questions: [
+      {
+        id:'g1', type:'mc',
+        q:'Choose the correct form: "I remember ___ her at the party."',
+        opts:['meet','to meet','meeting','met'],
+        ans:2
+      },
+      {
+        id:'g2', type:'mc',
+        q:'Which sentence uses a state verb correctly?',
+        opts:[
+          'I am knowing the answer.',
+          'She is believing you.',
+          'He knows the answer.',
+          'They are preferring tea.'
+        ],
+        ans:2
+      },
+      {
+        id:'g3', type:'fill',
+        q:'Fill in with the correct quantifier: "There isn\'t ___ milk left." <em>(much / many / a few)</em>',
+        ans:'much'
+      },
+      {
+        id:'g4', type:'mc',
+        q:'"___ called while you were out." — Choose the correct pronoun.',
+        opts:['Somebody','Anybody','Nobody','Everybody'],
+        ans:0
+      },
+      {
+        id:'g5', type:'mc',
+        q:'Choose the correct article: "___ apple a day keeps the doctor away."',
+        opts:['A','An','The','—'],
+        ans:1
+      },
+      {
+        id:'g6', type:'fill',
+        q:'Fill in: "I walk to school, ___ my brother takes the bus." <em>(although / however / so)</em>',
+        ans:'however'
+      },
+      {
+        id:'g7', type:'mc',
+        q:'Which time preposition is correct? "I was born ___ 1999."',
+        opts:['at','on','in','for'],
+        ans:2
+      },
+      {
+        id:'g8', type:'mc',
+        q:'Choose the correct sentence with an adverb:',
+        opts:[
+          'She sings beautiful.',
+          'She sings beautifully.',
+          'She sings beauty.',
+          'She sings beauteous.'
+        ],
+        ans:1
+      },
+      {
+        id:'g9', type:'fill',
+        q:'Fill in with the correct container: "a ___ of bread" <em>(loaf / packet / slice / bunch)</em>',
+        ans:'loaf'
+      },
+      {
+        id:'g10', type:'mc',
+        q:'"___ you finish your homework, you can watch TV." Choose the connector.',
+        opts:['Although','However','So','Although — so'],
+        ans:2
+      },
+      {
+        id:'g11', type:'mc',
+        q:'Which is the correct irregular past tense of "fall"?',
+        opts:['falled','felt','fell','fallen'],
+        ans:2
+      },
+      {
+        id:'g12', type:'fill',
+        q:'Fill in: "Is there ___ sugar? I\'d like a little." <em>(some / any / no)</em>',
+        ans:'any'
+      },
+    ]
+  },
+  {
+    id: 'writing',
+    label: 'Section 3 — Writing',
+    questions: [
+      {
+        id:'w1', type:'writing',
+        q:'Write 4–6 sentences describing yourself — include where you live, what you look like, and one thing you are crazy about. Use at least 3 words from the vocabulary list.',
+      },
+      {
+        id:'w2', type:'writing',
+        q:'Write a short paragraph (4–5 sentences) about a place you like. Use "although", "however" or "so" at least once. Mention what you can see, do, or buy there.',
+      },
+      {
+        id:'w3', type:'writing',
+        q:'Your friend moved abroad. Write 3–4 sentences to keep in touch with them. Use: "this is a photo of me", "it depends", and "come back / return".',
+      },
+    ]
+  },
+  {
+    id: 'speaking',
+    label: 'Section 4 — Speaking (voice message)',
+    questions: [
+      {
+        id:'s1', type:'speaking',
+        q:'Talk about your daily routine. Include: when you have a lie in, whether you go for a walk or run, and something you are interested in. Speak for about 45–60 seconds.',
+        tip:'Use: "I usually…", "On weekends…", "I\'m crazy about…", "It depends on…"'
+      },
+      {
+        id:'s2', type:'speaking',
+        q:'Describe someone in your family or a friend. Talk about what they look like (hair, beard, etc.), their personality (open-minded, kind), and something they are passionate about.',
+        tip:'Use: "This is a photo of…", "She/He has…", "Apart from that…", "A bit…"'
+      },
+    ]
+  }
+];
+
+// State
+let ptAnswers   = {};    // id → value
+let ptRecorders = {};    // id → { blob, url }
+let ptSubmitted = false;
+let ptTotalAuto = 0;
+let ptTotalQ    = 0;
+
+function initProgressTest() {
+  // Count totals
+  PT_SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      ptTotalQ++;
+      if (q.type === 'mc' || q.type === 'fill') ptTotalAuto++;
+    });
+  });
+
+  renderProgressTest();
+  showScreen('s-progress');
+}
+
+function renderProgressTest() {
+  const body = document.getElementById('pt-body');
+  let html = '';
+  let qNum = 0;
+
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section"><div class="pt-section-label">${esc(sec.label)}</div>`;
+
+    sec.questions.forEach(q => {
+      qNum++;
+      html += `<div class="pt-q" id="ptq-${q.id}">`;
+      html += `<div class="pt-q-num">Question ${qNum}</div>`;
+
+      if (q.type === 'mc') {
+        html += `<div class="pt-q-text">${q.q}</div>`;
+        html += `<div class="pt-opts">`;
+        q.opts.forEach((opt, j) => {
+          html += `<div class="pt-opt" id="ptopt-${q.id}-${j}" onclick="ptSelectMC('${q.id}',${j})">${esc(opt)}</div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'fill') {
+        html += `<div class="pt-q-text">${q.q}</div>`;
+        html += `<input type="text" class="pt-fill fill-inp" id="ptfill-${q.id}" placeholder="Your answer…" oninput="ptSaveText('${q.id}',this.value)" autocorrect="off" spellcheck="false"/>`;
+
+      } else if (q.type === 'writing') {
+        html += `<div class="pt-q-text">${q.q}</div>`;
+        html += `<textarea class="pt-textarea" id="ptwrite-${q.id}" placeholder="Write your answer here…" rows="5" oninput="ptSaveText('${q.id}',this.value)"></textarea>`;
+
+      } else if (q.type === 'speaking') {
+        html += `<div class="pt-q-text">${q.q}</div>`;
+        html += `<div class="pt-speaking-prompt">${esc(q.tip)}</div>`;
+        html += `<button class="pt-voice-btn" id="ptvoice-${q.id}" onclick="ptToggleRecording('${q.id}')">`;
+        html += `<span class="pt-dot" id="ptdot-${q.id}"></span> <span id="ptvoicelbl-${q.id}">Start recording</span></button>`;
+        html += `<div class="pt-audio-wrap" id="ptaudio-${q.id}"></div>`;
+        html += `<p class="pt-speaking-note">Record your voice message and send it to your teacher via WhatsApp or Telegram after submitting.</p>`;
+      }
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `<div class="pt-submit-area">
+    <button class="btn pri full" id="pt-submit-btn" onclick="ptSubmit()">Submit Progress Test</button>
+  </div>`;
+
+  body.innerHTML = html;
+  ptUpdateProgress();
+}
+
+function ptSelectMC(id, idx) {
+  if (ptSubmitted) return;
+  ptAnswers[id] = idx;
+  document.querySelectorAll(`[id^="ptopt-${id}-"]`).forEach(el => el.classList.remove('sel'));
+  document.getElementById(`ptopt-${id}-${idx}`)?.classList.add('sel');
+  ptUpdateProgress();
+}
+
+function ptSaveText(id, val) {
+  ptAnswers[id] = val;
+  ptUpdateProgress();
+}
+
+function ptUpdateProgress() {
+  const answered = Object.keys(ptAnswers).filter(k => {
+    const v = ptAnswers[k];
+    return v !== '' && v !== null && v !== undefined;
+  }).length;
+  const pct = ptTotalQ > 0 ? Math.round(answered / ptTotalQ * 100) : 0;
+  const bar = document.getElementById('pt-prog');
+  if (bar) bar.style.width = pct + '%';
+}
+
+// ── VOICE RECORDING ──────────────────────────────
+async function ptToggleRecording(id) {
+  const rec = ptRecorders[id];
+  if (rec && rec.active) {
+    rec.mediaRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    ptRecorders[id] = { mediaRecorder: mr, active: true };
+
+    const btn = document.getElementById(`ptvoice-${id}`);
+    const dot = document.getElementById(`ptdot-${id}`);
+    const lbl = document.getElementById(`ptvoicelbl-${id}`);
+    btn.classList.add('recording');
+    dot.classList.add('rec');
+    lbl.textContent = 'Recording… tap to stop';
+
+    mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    mr.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      ptRecorders[id].active = false;
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url  = URL.createObjectURL(blob);
+      ptAnswers[id] = 'recorded';
+      ptRecorders[id].blob = blob;
+      ptRecorders[id].url  = url;
+
+      btn.classList.remove('recording');
+      dot.classList.remove('rec');
+      lbl.textContent = 'Re-record';
+
+      const wrap = document.getElementById(`ptaudio-${id}`);
+      wrap.innerHTML = `<audio controls src="${url}" style="width:100%;margin-top:6px;height:36px"></audio>`;
+      ptUpdateProgress();
+    };
+    mr.start();
+  } catch (e) {
+    alert('Microphone access denied. Please allow microphone and try again.');
+  }
+}
+
+// ── SUBMIT ───────────────────────────────────────
+function ptSubmit() {
+  // Check for unanswered auto-scored questions
+  let missing = [];
+  PT_SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      if ((q.type === 'mc' || q.type === 'fill') && (ptAnswers[q.id] === undefined || ptAnswers[q.id] === '')) {
+        missing.push(q.id);
+      }
+    });
+  });
+
+  if (missing.length > 0) {
+    const proceed = confirm(`You have ${missing.length} unanswered question(s). Submit anyway?`);
+    if (!proceed) return;
+  }
+
+  ptSubmitted = true;
+  document.getElementById('pt-submit-btn').disabled = true;
+  ptShowResults();
+}
+
+function ptShowResults() {
+  // Auto-score mc and fill
+  let score = 0, maxAuto = 0;
+  const allQs = PT_SECTIONS.flatMap(s => s.questions);
+  allQs.forEach(q => {
+    if (q.type === 'mc') {
+      maxAuto++;
+      if (ptAnswers[q.id] === q.ans) score++;
+    } else if (q.type === 'fill') {
+      maxAuto++;
+      const given = String(ptAnswers[q.id] || '').trim().toLowerCase();
+      const correct = String(q.ans || '').trim().toLowerCase();
+      if (given === correct) score++;
+    }
+  });
+
+  const pct = maxAuto > 0 ? Math.round(score / maxAuto * 100) : 0;
+  let msg = pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good job! A few things to review.' : 'Keep practising — you can do it!';
+
+  const body = document.getElementById('pt-body');
+  let html = `
+    <div class="pt-score-box">
+      <div class="pt-score-num">${score}/${maxAuto}</div>
+      <div class="pt-score-label">Auto-scored questions (vocabulary &amp; grammar)</div>
+      <div class="pt-score-msg">${msg}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px">Writing and speaking will be reviewed by your teacher.</div>
+    </div>`;
+
+  html += `<div class="pt-section"><div class="pt-section-label">Review your answers</div>`;
+  let qNum = 0;
+  allQs.forEach(q => {
+    qNum++;
+    html += `<div class="pt-review-q">`;
+    html += `<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Question ${qNum}</div>`;
+    html += `<div style="font-size:14px;font-weight:500;margin-bottom:6px;line-height:1.5">${q.q}</div>`;
+
+    if (q.type === 'mc') {
+      const given = ptAnswers[q.id];
+      const isOk = given === q.ans;
+      html += `<div class="${isOk ? 'pt-correct-mark' : 'pt-wrong-mark'}">${isOk ? '✓' : '✗'} Your answer: ${given !== undefined ? esc(q.opts[given]) : '(not answered)'}</div>`;
+      if (!isOk) html += `<div class="pt-correct-ans">Correct: ${esc(q.opts[q.ans])}</div>`;
+
+    } else if (q.type === 'fill') {
+      const given = ptAnswers[q.id] || '';
+      const isOk = given.trim().toLowerCase() === q.ans.toLowerCase();
+      html += `<div class="${isOk ? 'pt-correct-mark' : 'pt-wrong-mark'}">${isOk ? '✓' : '✗'} Your answer: ${given || '(blank)'}</div>`;
+      if (!isOk) html += `<div class="pt-correct-ans">Correct: ${esc(q.ans)}</div>`;
+
+    } else if (q.type === 'writing') {
+      const given = ptAnswers[q.id] || '';
+      html += `<div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6;white-space:pre-wrap">${esc(given) || '(no answer)'}</div>`;
+      html += `<div style="font-size:12px;color:var(--cyan);margin-top:6px">Awaiting teacher review</div>`;
+
+    } else if (q.type === 'speaking') {
+      const rec = ptRecorders[q.id];
+      if (rec && rec.url) {
+        html += `<audio controls src="${rec.url}" style="width:100%;height:36px;margin-top:6px"></audio>`;
+        html += `<div style="font-size:12px;color:var(--cyan);margin-top:6px">Recorded — send to your teacher via WhatsApp or Telegram</div>`;
+      } else {
+        html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">No recording</div>`;
+      }
+    }
+
+    html += `</div>`;
+  });
+  html += `</div>`;
+  html += `<div style="text-align:center;padding:8px 0 32px"><button class="btn" onclick="ptRestart()">← Retake test</button></div>`;
+
+  body.innerHTML = html;
+  window.scrollTo(0,0);
+}
+
+function ptRestart() {
+  ptAnswers   = {};
+  ptRecorders = {};
+  ptSubmitted = false;
+  renderProgressTest();
+  window.scrollTo(0,0);
 }
 
 // ═══════════════════════════════════════════════
