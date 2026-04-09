@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Homework — Teacher</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0b;--surface:#1a1816;--surface2:#222018;
+  --border:#2e2b26;--ink:#e8e4dc;--muted:#8a8680;--subtle:#3d3a35;
+  --cyan:#06b6d4;--cyan-d:#0891b2;--cyan-bg:rgba(6,182,212,.08);
+  --green:#5aaf7a;--green-bg:#0d1f14;
+  --red:#e85a5a;--red-bg:#2a0f0f;
+  --yellow:#f0c040;
+  --r:8px;--rs:5px;
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:210px;flex-shrink:0;background:#090807;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.brand{padding:18px 18px 16px;font-size:17px;font-weight:600;border-bottom:1px solid var(--border);color:var(--ink);letter-spacing:-.3px}
+.brand span{color:var(--cyan)}
+.nav{display:flex;flex-direction:column;padding:8px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13.5px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;transition:all .12s}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--ink)}
+.nav-item.active{background:var(--cyan-bg);color:var(--cyan);border-left-color:var(--cyan)}
+.nav-icon{width:18px;text-align:center;flex-shrink:0;font-size:15px}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.view{display:none;padding:28px 32px;max-width:860px;width:100%}
+.view.active{display:block}
+
+/* ── VIEW HEADER ── */
+.view-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.view-title{font-size:21px;font-weight:600}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 15px;font-size:13px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;line-height:1.4}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--cyan-d);border-color:var(--cyan-d);color:#fff}
+.btn.pri:hover{background:var(--cyan);border-color:var(--cyan)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── INPUTS ── */
+input[type=text],input[type=date],input[type=number],textarea,select{
+  font-family:inherit;font-size:14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--ink);padding:8px 11px;outline:none;transition:border-color .12s;width:100%
+}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:72px}
+
+/* ── FORM ── */
+.inline-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:20px}
+.fgroup{margin-bottom:12px}
+.fgroup:last-child{margin-bottom:0}
+.fgroup label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.form-row .fgroup{margin-bottom:0;flex:1;min-width:120px}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
+
+/* ── STUDENTS ── */
+.student-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap}
+.student-name{font-weight:500;flex:0 0 160px;min-width:0}
+.student-link{flex:1;font-size:11.5px;color:var(--muted);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.student-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* ── ASSIGNMENTS ── */
+.assign-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap}
+.assign-title{font-weight:500;flex:1;min-width:140px}
+.assign-meta{font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.assign-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+
+/* ── BUILDER ── */
+.builder-hd{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;padding:2px 6px;line-height:1;transition:color .12s}
+.back-btn:hover{color:var(--ink)}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+
+/* Question cards */
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.q-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.qtype-badge{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--surface2);color:var(--muted);flex-shrink:0}
+.q-reorder{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.q-reorder button{background:none;border:none;color:var(--muted);cursor:pointer;padding:1px 5px;line-height:1.3;font-size:11px;transition:color .1s}
+.q-reorder button:hover{color:var(--ink)}
+.options-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.option-row{display:flex;align-items:center;gap:8px}
+.option-row input[type=radio]{width:auto;flex-shrink:0;accent-color:var(--cyan);cursor:pointer}
+.option-row .opt-inp{flex:1}
+.add-q-bar{display:flex;gap:8px;padding:12px;background:var(--surface2);border-radius:var(--r);margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.add-q-bar span{font-size:12px;color:var(--muted)}
+
+/* Assign students section */
+.assign-students-section{padding-top:20px;border-top:1px solid var(--border);margin-top:4px}
+.checkbox-list{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+.checkbox-item{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--surface2);border-radius:var(--rs);cursor:pointer;user-select:none}
+.checkbox-item input[type=checkbox]{width:auto;accent-color:var(--cyan);cursor:pointer}
+
+/* ── SUBMISSIONS TABLE ── */
+.sub-table{width:100%;border-collapse:collapse}
+.sub-table th,.sub-table td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--border);font-size:13px}
+.sub-table th{color:var(--muted);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.sub-table tbody tr:hover td{background:var(--surface2)}
+
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.badge-submitted{background:rgba(6,182,212,.15);color:var(--cyan)}
+.badge-graded{background:var(--green-bg);color:var(--green)}
+.badge-pending{background:var(--surface2);color:var(--muted)}
+
+/* Grading panel */
+.grading-q{padding:14px 0;border-bottom:1px solid var(--border)}
+.grading-q:last-of-type{border-bottom:none}
+.grading-q-text{font-weight:500;margin-bottom:8px;font-size:14px}
+.ans-box{padding:8px 12px;border-radius:var(--rs);font-size:13px;margin-top:4px;border:1px solid transparent}
+.ans-student{background:var(--surface2);border-color:var(--border)}
+.ans-correct{background:var(--green-bg);border-color:rgba(90,175,122,.3);color:var(--green)}
+.ans-wrong{background:var(--red-bg);border-color:rgba(232,90,90,.3);color:var(--red)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:17px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:2px}
+.modal-close:hover{color:var(--ink)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 16px;font-size:13px;z-index:2000;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;max-width:300px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── LOADING / EMPTY ── */
+.loading{display:flex;align-items:center;gap:10px;color:var(--muted);padding:20px 0}
+.spinner{width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{color:var(--muted);padding:28px 0;text-align:center;font-size:13px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── AI CHAT ── */
+.ai-wrap{display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.ai-key-bar{display:flex;gap:8px;align-items:center;padding:10px 0 16px;flex-shrink:0;flex-wrap:wrap}
+.ai-key-bar input{flex:1;min-width:200px;font-family:monospace;font-size:13px}
+.ai-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 0 16px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.ai-msg{max-width:85%;padding:12px 15px;border-radius:var(--r);font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{align-self:flex-end;background:var(--cyan-d);color:#fff;border-radius:var(--r) var(--r) 4px var(--r)}
+.ai-msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r) var(--r) var(--r) 4px}
+.ai-msg.ai.thinking{color:var(--muted);font-style:italic}
+.ai-msg.created{align-self:flex-start;background:var(--green-bg);border:1px solid rgba(90,175,122,.3);color:var(--green);border-radius:var(--r);cursor:pointer}
+.ai-msg.created:hover{border-color:var(--green)}
+.ai-input-row{display:flex;gap:8px;flex-shrink:0;padding-top:8px;border-top:1px solid var(--border)}
+.ai-input-row textarea{flex:1;min-height:44px;max-height:140px;resize:none;font-size:14px;padding:10px 12px;line-height:1.5}
+/* ── PROGRESS TEST VIEW ── */
+.pt-header-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.pt-header-card .pt-info{flex:1;min-width:200px}
+.pt-header-card h2{font-size:16px;font-weight:600;margin-bottom:4px}
+.pt-header-card p{font-size:13px;color:var(--muted);line-height:1.5}
+.pt-header-card .pt-link-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pt-link-box{font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:5px 10px;color:var(--muted);font-family:monospace;word-break:break-all;flex:1}
+.pt-section-hd{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pt-q-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.pt-q-row .pt-q-meta{font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.pt-q-row .pt-q-text{font-size:14px;font-weight:500;line-height:1.5;margin-bottom:8px}
+.pt-q-row .pt-q-text em{font-weight:400;color:var(--muted);font-style:italic;font-size:13px}
+.pt-opts-preview{display:flex;flex-direction:column;gap:4px}
+.pt-opt-preview{font-size:13px;padding:4px 10px;border-radius:var(--rs);color:var(--muted)}
+.pt-opt-preview.correct-opt{background:var(--green-bg);color:var(--green);font-weight:500}
+.pt-answer-key{font-size:12px;color:var(--green);margin-top:6px}
+.pt-type-badge{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--border);color:var(--muted)}
+.pt-speaking-prompt{background:var(--surface2);border-left:2px solid var(--cyan);padding:8px 12px;font-size:13px;color:var(--ink);border-radius:0 var(--rs) var(--rs) 0;margin-bottom:6px;line-height:1.55}
+.pt-speaking-tip{font-size:12px;color:var(--muted);font-style:italic;line-height:1.5}
+
+/* Submission grading panel */
+.pt-sub-table{width:100%;border-collapse:collapse;font-size:13px}
+.pt-sub-table th{text-align:left;padding:7px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+.pt-sub-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.pt-sub-table tr:last-child td{border-bottom:none}
+.pt-sub-table tr:hover td{background:rgba(255,255,255,.02)}
+.pt-grade-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-top:20px;overflow:hidden}
+.pt-grade-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.pt-grade-hd h3{font-size:14px;font-weight:600}
+.pt-grade-body{padding:16px}
+.pt-answer-block{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.pt-answer-block:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.pt-answer-block .pt-q-label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.pt-answer-block .pt-q-body{font-size:13px;font-weight:500;margin-bottom:6px;line-height:1.4}
+.pt-student-ans{background:var(--surface2);border-radius:var(--rs);padding:8px 12px;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.pt-auto-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:99px}
+.pt-auto-ok{background:var(--green-bg);color:var(--green)}
+.pt-auto-bad{background:var(--red-bg);color:var(--red)}
+.pt-grade-inputs{display:flex;flex-direction:column;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.pt-score-row{display:flex;align-items:center;gap:10px}
+</style>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="brand"><span>✦</span> Homework</div>
+    <nav class="nav">
+      <button class="nav-item active" id="nav-students" onclick="showView('students')">
+        <span class="nav-icon">👤</span> Students
+      </button>
+      <button class="nav-item" id="nav-assignments" onclick="showView('assignments')">
+        <span class="nav-icon">📝</span> Assignments
+      </button>
+      <button class="nav-item" id="nav-ai" onclick="showView('ai')">
+        <span class="nav-icon">✦</span> AI Generator
+      </button>
+      <button class="nav-item" id="nav-progress" onclick="showView('progress')">
+        <span class="nav-icon">🎯</span> Progress Tests
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- STUDENTS VIEW -->
+    <section class="view active" id="v-students">
+      <div class="view-hd">
+        <h1 class="view-title">Students</h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="syncFromWork()" title="Import active students from your Work tab">⟳ Sync from Work</button>
+          <button class="btn pri" onclick="toggleForm('add-student-form',this,'+ Add Student')">+ Add Student</button>
+        </div>
+      </div>
+
+      <div id="add-student-form" style="display:none" class="inline-form">
+        <div class="form-row">
+          <div class="fgroup">
+            <label>Student Name</label>
+            <input type="text" id="student-name-inp" placeholder="e.g. Aisha Nurlanovna"
+              onkeydown="if(event.key==='Enter')addStudent()"/>
+          </div>
+          <button class="btn pri" id="add-student-btn" onclick="addStudent()">Add</button>
+          <button class="btn" onclick="toggleForm('add-student-form',null,'+ Add Student')">Cancel</button>
+        </div>
+      </div>
+
+      <div id="students-list">
+        <div class="loading"><div class="spinner"></div> Loading students…</div>
+      </div>
+    </section>
+
+    <!-- ASSIGNMENTS VIEW -->
+    <section class="view" id="v-assignments">
+      <div class="view-hd">
+        <h1 class="view-title">Assignments</h1>
+        <button class="btn pri" onclick="toggleForm('create-asgn-form',this,'+ New Assignment')">+ New Assignment</button>
+      </div>
+
+      <div id="create-asgn-form" style="display:none" class="inline-form">
+        <div class="fgroup">
+          <label>Title</label>
+          <input type="text" id="asgn-title-inp" placeholder="e.g. Unit 3 Vocabulary"/>
+        </div>
+        <div class="form-row">
+          <div class="fgroup">
+            <label>Description (optional)</label>
+            <input type="text" id="asgn-desc-inp" placeholder="Brief instructions…"/>
+          </div>
+          <div class="fgroup" style="flex:0 0 170px">
+            <label>Due Date</label>
+            <input type="date" id="asgn-due-inp"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn pri" id="create-asgn-btn" onclick="createAssignment()">Create</button>
+          <button class="btn" onclick="toggleForm('create-asgn-form',null,'+ New Assignment')">Cancel</button>
+        </div>
+      </div>
+
+      <div id="assignments-list">
+        <div class="loading"><div class="spinner"></div> Loading assignments…</div>
+      </div>
+    </section>
+
+    <!-- BUILDER VIEW -->
+    <section class="view" id="v-builder">
+      <div class="builder-hd">
+        <button class="back-btn" onclick="showView('assignments')" title="Back">←</button>
+        <h1 class="view-title" id="builder-title">Assignment Builder</h1>
+      </div>
+
+      <!-- Meta editing -->
+      <div class="card" style="margin-bottom:22px">
+        <div class="form-row" style="align-items:flex-start">
+          <div class="fgroup">
+            <label>Title</label>
+            <input type="text" id="b-title"/>
+          </div>
+          <div class="fgroup">
+            <label>Description</label>
+            <input type="text" id="b-desc"/>
+          </div>
+          <div class="fgroup" style="flex:0 0 145px">
+            <label>Due Date</label>
+            <input type="date" id="b-due"/>
+          </div>
+          <button class="btn pri" onclick="saveBuilderMeta()" style="align-self:flex-end">Save</button>
+        </div>
+      </div>
+
+      <!-- Questions list -->
+      <div class="section-label">Questions</div>
+      <div id="questions-list"></div>
+
+      <!-- Add question buttons -->
+      <div class="add-q-bar">
+        <span>Add question:</span>
+        <button class="btn sm" onclick="addQuestion('multiple_choice')">Multiple Choice</button>
+        <button class="btn sm" onclick="addQuestion('fill_blank')">Fill in the Blank</button>
+        <button class="btn sm" onclick="addQuestion('short_answer')">Short Answer</button>
+      </div>
+
+      <!-- Assign to students -->
+      <div class="assign-students-section">
+        <div class="section-label">Assign to Students</div>
+        <div id="assign-student-list" class="checkbox-list"></div>
+        <button class="btn pri" onclick="saveAssignments()" style="margin-top:4px">Save Assignments</button>
+      </div>
+    </section>
+
+    <!-- AI GENERATOR VIEW -->
+    <section class="view" id="v-ai">
+      <div class="view-hd" style="margin-bottom:0">
+        <h1 class="view-title">AI Homework Generator</h1>
+      </div>
+      <div class="ai-wrap">
+        <!-- API key row -->
+        <div class="ai-key-bar">
+          <input type="password" id="ai-key-inp" placeholder="Paste your Anthropic API key (sk-ant-…)" style="font-family:monospace"/>
+          <button class="btn sm" onclick="saveAiKey()">Save Key</button>
+          <span id="ai-key-status" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <!-- Messages -->
+        <div class="ai-messages" id="ai-messages">
+          <div class="ai-msg ai">👋 Hi! Tell me what homework to create.\n\nExamples:\n• "Make 5 multiple choice questions about Past Simple"\n• "Fill in the blank exercises: she ___ (go), he ___ (eat), they ___ (write)"\n• "Mixed quiz on animals vocabulary, 6 questions"\n• Just paste a list of words or a grammar topic and I'll do the rest.</div>
+        </div>
+        <!-- Input -->
+        <div class="ai-input-row">
+          <textarea id="ai-inp" placeholder="Describe the homework you want…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
+          <button class="btn pri" onclick="sendAiMessage()" style="align-self:flex-end;padding:10px 16px">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBMISSIONS VIEW -->
+    <section class="view" id="v-submissions">
+      <div class="builder-hd">
+        <button class="back-btn" onclick="showView('assignments')" title="Back">←</button>
+        <h1 class="view-title" id="submissions-title">Submissions</h1>
+      </div>
+      <div id="submissions-content"></div>
+    </section>
+
+    <!-- PROGRESS TEST VIEW -->
+    <section class="view" id="v-progress">
+      <div class="view-hd">
+        <h1 class="view-title">Progress Tests</h1>
+      </div>
+
+      <!-- Aida's test card -->
+      <div class="pt-header-card">
+        <div class="pt-info">
+          <h2>Aida — End-of-course progress test</h2>
+          <p>22 auto-scored questions (vocabulary + grammar) · 3 writing tasks · 2 speaking prompts<br>
+          Covers all course content: vocabulary, grammar, -ing/-ed, state verbs, quantifiers, articles, connectors, adverbs, containers and more.</p>
+          <div class="pt-link-row">
+            <span class="pt-link-box" id="aida-test-link">—</span>
+            <button class="btn sm pri" onclick="copyAidaLink()">Copy link</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+          <button class="btn sm" onclick="showPtTab('questions')">View questions</button>
+          <button class="btn sm" onclick="showPtTab('submissions')">Aida's answers</button>
+        </div>
+      </div>
+
+      <!-- Tab switcher -->
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px">
+        <button class="nav-item active" id="pttab-questions" style="border-left:none;padding:8px 16px;border-bottom:2px solid var(--cyan);margin-bottom:-1px;color:var(--cyan)" onclick="showPtTab('questions')">Questions</button>
+        <button class="nav-item" id="pttab-submissions" style="border-left:none;padding:8px 16px" onclick="showPtTab('submissions')">Aida's Answers & Grading</button>
+      </div>
+
+      <!-- Questions panel -->
+      <div id="pt-panel-questions">
+        <div id="pt-questions-body"></div>
+      </div>
+
+      <!-- Submissions panel -->
+      <div id="pt-panel-submissions" style="display:none">
+        <div id="pt-submissions-body">
+          <div style="color:var(--muted);font-size:13px">Aida hasn't submitted yet, or submit a test via the student page first. Submissions stored in Supabase load here.</div>
+        </div>
+        <div id="pt-grade-panel"></div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- ── GRADING MODAL ── -->
+<div id="grading-modal" class="modal-overlay" style="display:none"
+  onclick="if(event.target===this)closeGradingModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="grading-title">Grade Submission</span>
+      <button class="modal-close" onclick="closeGradingModal()">×</button>
+    </div>
+    <div id="grading-body"></div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURATION — paste your Supabase values here
+// ═══════════════════════════════════════════════
+const SUPABASE_URL  = 'https://qqqjiwrfudcvsjcxeavd.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTgxMDAsImV4cCI6MjA5MDg5NDEwMH0.hvUN1MAP32eF-4sbjpQXRFWRyf3prsDjDGu_vzwvpyo';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let students          = [];   // all students
+let assignments       = [];   // all assignments
+let currentAsgn       = null; // assignment id open in builder/submissions
+let currentItems      = [];   // questions in builder
+let assignedStudents  = new Set(); // student ids assigned in builder
+
+// grading state
+let gradingSubId   = null;
+let gradingItems   = [];
+let gradingSub     = null;
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+function studentLink(token) {
+  // Build link relative to this file — works locally and on GitHub Pages
+  const base = location.href.replace(/[^/]*$/, '');
+  return `${base}student.html?t=${token}`;
+}
+
+function genToken() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({length: 16}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function toggleForm(id, triggerBtn, defaultLabel) {
+  const el = document.getElementById(id);
+  const shown = el.style.display !== 'none';
+  el.style.display = shown ? 'none' : 'block';
+  // Refocus first input when opening
+  if (!shown) {
+    setTimeout(() => el.querySelector('input')?.focus(), 50);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const v = document.getElementById(`v-${name}`);
+  const n = document.getElementById(`nav-${name}`);
+  if (v) v.classList.add('active');
+  if (n) n.classList.add('active');
+
+  if (name === 'students')    loadStudents();
+  if (name === 'assignments') loadAssignments();
+  if (name === 'progress')    initProgressView();
+}
+
+// ═══════════════════════════════════════════════
+//  STUDENTS
+// ═══════════════════════════════════════════════
+async function loadStudents() {
+  const el = document.getElementById('students-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const { data, error } = await sb.from('students').select('*').order('created_at');
+    if (error) throw error;
+    students = data || [];
+    renderStudents();
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderStudents() {
+  const el = document.getElementById('students-list');
+  if (!students.length) {
+    el.innerHTML = '<div class="empty">No students yet. Add one above.</div>';
+    return;
+  }
+  el.innerHTML = students.map(s => {
+    const link = studentLink(s.token);
+    return `
+    <div class="student-item">
+      <span class="student-name">${esc(s.name)}</span>
+      <span class="student-link" title="${esc(link)}">${esc(link)}</span>
+      <div class="student-actions">
+        <button class="btn sm" onclick="copyLink('${esc(link)}')">Copy Link</button>
+        <button class="btn sm danger" onclick="deleteStudent('${s.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addStudent() {
+  const name = document.getElementById('student-name-inp').value.trim();
+  if (!name) { toast('Enter a name', 'err'); return; }
+  const btn = document.getElementById('add-student-btn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    const { error } = await sb.from('students').insert({ name, token: genToken() });
+    if (error) throw error;
+    document.getElementById('student-name-inp').value = '';
+    document.getElementById('add-student-form').style.display = 'none';
+    toast(`Added ${name}`);
+    loadStudents();
+  } catch (e) {
+    toast(e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add';
+  }
+}
+
+async function deleteStudent(id) {
+  const s = students.find(x => x.id === id);
+  if (!confirm(`Delete "${s?.name || 'student'}"? This cannot be undone.`)) return;
+  try {
+    const { error } = await sb.from('students').delete().eq('id', id);
+    if (error) throw error;
+    toast('Student deleted');
+    loadStudents();
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+function copyLink(link) {
+  navigator.clipboard.writeText(link)
+    .then(() => toast('Link copied!'))
+    .catch(() => toast('Could not copy — try manually', 'err'));
+}
+
+// ═══════════════════════════════════════════════
+//  ASSIGNMENTS
+// ═══════════════════════════════════════════════
+async function loadAssignments() {
+  const el = document.getElementById('assignments-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const [{ data: asgns, error }, { data: sa }, { data: subs }] = await Promise.all([
+      sb.from('assignments').select('*').order('created_at', { ascending: false }),
+      sb.from('student_assignments').select('assignment_id'),
+      sb.from('submissions').select('assignment_id'),
+    ]);
+    if (error) throw error;
+    assignments = asgns || [];
+
+    // Build count maps
+    const assigned  = {};
+    const submitted = {};
+    (sa   || []).forEach(r => { assigned[r.assignment_id]  = (assigned[r.assignment_id]  || 0) + 1; });
+    (subs || []).forEach(r => { submitted[r.assignment_id] = (submitted[r.assignment_id] || 0) + 1; });
+
+    renderAssignments(assigned, submitted);
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderAssignments(assigned, submitted) {
+  const el = document.getElementById('assignments-list');
+  if (!assignments.length) {
+    el.innerHTML = '<div class="empty">No assignments yet. Create one above.</div>';
+    return;
+  }
+  el.innerHTML = assignments.map(a => `
+    <div class="assign-item">
+      <div class="assign-title">${esc(a.title)}</div>
+      <div class="assign-meta">
+        <span>Due: ${fmt(a.due_date)}</span>
+        <span>${assigned[a.id] || 0} assigned</span>
+        <span>${submitted[a.id] || 0} submitted</span>
+      </div>
+      <div class="assign-actions">
+        <button class="btn sm" onclick="openBuilder('${a.id}')">Build</button>
+        <button class="btn sm" onclick="openSubmissions('${a.id}')">Submissions</button>
+        <button class="btn sm danger" onclick="deleteAssignment('${a.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function createAssignment() {
+  const title = document.getElementById('asgn-title-inp').value.trim();
+  if (!title) { toast('Enter a title', 'err'); return; }
+  const description = document.getElementById('asgn-desc-inp').value.trim() || null;
+  const due_date    = document.getElementById('asgn-due-inp').value || null;
+  const btn = document.getElementById('create-asgn-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const { data, error } = await sb.from('assignments')
+      .insert({ title, description, due_date }).select().single();
+    if (error) throw error;
+    document.getElementById('asgn-title-inp').value = '';
+    document.getElementById('asgn-desc-inp').value  = '';
+    document.getElementById('asgn-due-inp').value   = '';
+    document.getElementById('create-asgn-form').style.display = 'none';
+    toast('Assignment created');
+    await loadAssignments();
+    // Jump straight into builder
+    openBuilder(data.id);
+  } catch (e) {
+    toast(e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create';
+  }
+}
+
+async function deleteAssignment(id) {
+  const a = assignments.find(x => x.id === id);
+  if (!confirm(`Delete "${a?.title || 'assignment'}"? This cannot be undone.`)) return;
+  try {
+    const { error } = await sb.from('assignments').delete().eq('id', id);
+    if (error) throw error;
+    toast('Deleted');
+    loadAssignments();
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BUILDER
+// ═══════════════════════════════════════════════
+async function openBuilder(id) {
+  currentAsgn = id;
+  showView('builder');
+
+  // Fill meta fields
+  let a = assignments.find(x => x.id === id);
+  if (!a) {
+    const { data } = await sb.from('assignments').select('*').eq('id', id).single();
+    a = data;
+  }
+  if (a) {
+    document.getElementById('builder-title').textContent = a.title;
+    document.getElementById('b-title').value = a.title;
+    document.getElementById('b-desc').value  = a.description || '';
+    document.getElementById('b-due').value   = a.due_date    || '';
+  }
+
+  await loadItems();
+
+  // Load students if not already loaded
+  if (!students.length) {
+    const { data } = await sb.from('students').select('*').order('created_at');
+    students = data || [];
+  }
+
+  // Load which students are currently assigned
+  const { data: sa } = await sb.from('student_assignments')
+    .select('student_id').eq('assignment_id', id);
+  assignedStudents = new Set((sa || []).map(r => r.student_id));
+  renderAssignStudents();
+}
+
+async function loadItems() {
+  const el = document.getElementById('questions-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const { data, error } = await sb.from('items')
+    .select('*').eq('assignment_id', currentAsgn).order('order_index');
+  if (error) { el.innerHTML = `<div class="empty" style="color:var(--red)">${esc(error.message)}</div>`; return; }
+  currentItems = data || [];
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const el = document.getElementById('questions-list');
+  if (!currentItems.length) {
+    el.innerHTML = '<div class="empty" style="padding:14px 0">No questions yet. Add one below.</div>';
+    return;
+  }
+  el.innerHTML = currentItems.map((item, i) => questionCardHtml(item, i)).join('');
+}
+
+function questionCardHtml(item, i) {
+  const typeLabels = { multiple_choice: 'Multiple Choice', fill_blank: 'Fill in the Blank', short_answer: 'Short Answer' };
+  const label = typeLabels[item.type] || item.type;
+  let body = '';
+
+  if (item.type === 'multiple_choice') {
+    const opts = item.options || [];
+    body = `
+      <div class="fgroup">
+        <label>Question text</label>
+        <input type="text" value="${esc(item.question)}" placeholder="e.g. What tense is this sentence?"
+          oninput="setItemField('${item.id}','question',this.value)"/>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Options — select the correct one</label>
+        <div class="options-list">
+          ${[0,1,2,3,4,5].map(j => `
+            <div class="option-row">
+              <input type="radio" name="cor-${item.id}" value="${j}"
+                ${String(item.correct_answer) === String(j) ? 'checked' : ''}
+                onchange="setItemField('${item.id}','correct_answer','${j}')"/>
+              <input type="text" class="opt-inp" value="${esc(opts[j] || '')}" placeholder="Option ${j+1}"
+                oninput="setItemOption('${item.id}',${j},this.value)"/>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else if (item.type === 'fill_blank') {
+    body = `
+      <div class="fgroup">
+        <label>Question (use ___ for the blank)</label>
+        <input type="text" value="${esc(item.question)}" placeholder="e.g. She ___ to school every day."
+          oninput="setItemField('${item.id}','question',this.value)"/>
+      </div>
+      <div class="fgroup">
+        <label>Correct Answer</label>
+        <input type="text" value="${esc(item.correct_answer || '')}" placeholder="goes"
+          oninput="setItemField('${item.id}','correct_answer',this.value)"/>
+      </div>`;
+  } else {
+    body = `
+      <div class="fgroup">
+        <label>Question text</label>
+        <input type="text" value="${esc(item.question)}" placeholder="Write your question here…"
+          oninput="setItemField('${item.id}','question',this.value)"/>
+      </div>
+      <p style="font-size:12px;color:var(--muted)">Short answer — you grade this manually.</p>`;
+  }
+
+  return `
+    <div class="q-card" id="qc-${item.id}">
+      <div class="q-card-hd">
+        <div class="q-reorder">
+          <button onclick="moveQ('${item.id}',-1)" title="Move up">▲</button>
+          <button onclick="moveQ('${item.id}',1)"  title="Move down">▼</button>
+        </div>
+        <span style="font-size:12px;color:var(--muted)">Q${i+1}</span>
+        <span class="qtype-badge">${label}</span>
+        <button class="btn sm danger" style="margin-left:auto" onclick="deleteQ('${item.id}')">Delete</button>
+      </div>
+      ${body}
+      <button class="btn sm pri" onclick="saveQ('${item.id}')" style="margin-top:10px">Save question</button>
+    </div>`;
+}
+
+function renderAssignStudents() {
+  const el = document.getElementById('assign-student-list');
+  if (!students.length) {
+    el.innerHTML = '<div class="empty" style="padding:8px 0">No students yet — add them first.</div>';
+    return;
+  }
+  el.innerHTML = students.map(s => `
+    <label class="checkbox-item">
+      <input type="checkbox" value="${s.id}" ${assignedStudents.has(s.id) ? 'checked' : ''}/>
+      ${esc(s.name)}
+    </label>`).join('');
+}
+
+async function saveBuilderMeta() {
+  const title = document.getElementById('b-title').value.trim();
+  if (!title) { toast('Title required', 'err'); return; }
+  try {
+    const { error } = await sb.from('assignments').update({
+      title,
+      description: document.getElementById('b-desc').value.trim() || null,
+      due_date:    document.getElementById('b-due').value || null,
+    }).eq('id', currentAsgn);
+    if (error) throw error;
+    document.getElementById('builder-title').textContent = title;
+    // Update local cache
+    const a = assignments.find(x => x.id === currentAsgn);
+    if (a) { a.title = title; }
+    toast('Saved');
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+// In-memory mutation before DB save
+function setItemField(id, field, value) {
+  const item = currentItems.find(x => x.id === id);
+  if (item) item[field] = value;
+}
+
+function setItemOption(id, idx, value) {
+  const item = currentItems.find(x => x.id === id);
+  if (!item) return;
+  const opts = [...(item.options || Array(6).fill(''))];
+  while (opts.length < 6) opts.push('');
+  opts[idx] = value;
+  item.options = opts;
+}
+
+async function addQuestion(type) {
+  try {
+    const { data, error } = await sb.from('items').insert({
+      assignment_id: currentAsgn,
+      type,
+      question: '',
+      options: type === 'multiple_choice' ? Array(6).fill('') : null,
+      correct_answer: null,
+      order_index: currentItems.length,
+    }).select().single();
+    if (error) throw error;
+    currentItems.push(data);
+    renderQuestions();
+    setTimeout(() => document.getElementById(`qc-${data.id}`)?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+async function saveQ(id) {
+  const item = currentItems.find(x => x.id === id);
+  if (!item) return;
+  try {
+    const { error } = await sb.from('items').update({
+      question:       item.question,
+      options:        item.options,
+      correct_answer: item.correct_answer,
+    }).eq('id', id);
+    if (error) throw error;
+    toast('Question saved');
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+async function deleteQ(id) {
+  if (!confirm('Delete this question?')) return;
+  try {
+    const { error } = await sb.from('items').delete().eq('id', id);
+    if (error) throw error;
+    currentItems = currentItems.filter(x => x.id !== id);
+    await reorderItems();
+    renderQuestions();
+    toast('Deleted');
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+async function moveQ(id, dir) {
+  const i = currentItems.findIndex(x => x.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= currentItems.length) return;
+  [currentItems[i], currentItems[j]] = [currentItems[j], currentItems[i]];
+  await reorderItems();
+  renderQuestions();
+}
+
+async function reorderItems() {
+  await Promise.all(currentItems.map((item, i) =>
+    sb.from('items').update({ order_index: i }).eq('id', item.id)
+  ));
+}
+
+async function saveAssignments() {
+  const boxes = document.querySelectorAll('#assign-student-list input[type=checkbox]');
+  const selected = new Set([...boxes].filter(b => b.checked).map(b => b.value));
+  const toAdd    = [...selected].filter(id => !assignedStudents.has(id));
+  const toRemove = [...assignedStudents].filter(id => !selected.has(id));
+  try {
+    if (toRemove.length) {
+      const { error } = await sb.from('student_assignments')
+        .delete().eq('assignment_id', currentAsgn).in('student_id', toRemove);
+      if (error) throw error;
+    }
+    if (toAdd.length) {
+      const { error } = await sb.from('student_assignments')
+        .insert(toAdd.map(sid => ({ student_id: sid, assignment_id: currentAsgn })));
+      if (error) throw error;
+    }
+    assignedStudents = selected;
+    toast('Assignments saved');
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SUBMISSIONS
+// ═══════════════════════════════════════════════
+async function openSubmissions(id) {
+  currentAsgn = id;
+  showView('submissions');
+  const a = assignments.find(x => x.id === id);
+  document.getElementById('submissions-title').textContent =
+    `Submissions — ${a ? esc(a.title) : '…'}`;
+
+  const el = document.getElementById('submissions-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const [{ data: sa, error: e1 }, { data: subs, error: e2 }] = await Promise.all([
+      sb.from('student_assignments')
+        .select('student_id, students(id, name)')
+        .eq('assignment_id', id),
+      sb.from('submissions').select('*').eq('assignment_id', id),
+    ]);
+    if (e1) throw e1;
+    if (e2) throw e2;
+
+    if (!sa || !sa.length) {
+      el.innerHTML = '<div class="empty">No students assigned to this assignment.</div>';
+      return;
+    }
+
+    const subMap = {};
+    (subs || []).forEach(s => { subMap[s.student_id] = s; });
+
+    el.innerHTML = `
+      <table class="sub-table">
+        <thead><tr>
+          <th>Student</th><th>Status</th><th>Score</th><th>Submitted</th><th>Action</th>
+        </tr></thead>
+        <tbody>
+          ${sa.map(row => {
+            const st  = row.students;
+            const sub = subMap[st.id];
+            const statusHtml = sub
+              ? sub.status === 'graded'
+                ? '<span class="badge badge-graded">Graded</span>'
+                : '<span class="badge badge-submitted">Submitted</span>'
+              : '<span class="badge badge-pending">Not submitted</span>';
+            const scoreHtml = (sub && sub.status === 'graded')
+              ? `${sub.score} / ${sub.max_score}` : '—';
+            const dateHtml = sub
+              ? new Date(sub.submitted_at).toLocaleDateString() : '—';
+            const actionHtml = sub
+              ? `<button class="btn sm" onclick="openGrading('${sub.id}','${esc(st.name)}')">
+                  ${sub.status === 'graded' ? 'Edit Grade' : 'Grade'}
+                </button>`
+              : '—';
+            return `<tr>
+              <td>${esc(st.name)}</td>
+              <td>${statusHtml}</td>
+              <td>${scoreHtml}</td>
+              <td>${dateHtml}</td>
+              <td>${actionHtml}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  GRADING MODAL
+// ═══════════════════════════════════════════════
+async function openGrading(subId, studentName) {
+  gradingSubId = subId;
+  document.getElementById('grading-title').textContent = `Grade — ${studentName}`;
+  document.getElementById('grading-body').innerHTML =
+    '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('grading-modal').style.display = 'flex';
+
+  try {
+    const [{ data: sub, error: e1 }, { data: items, error: e2 }] = await Promise.all([
+      sb.from('submissions').select('*').eq('id', subId).single(),
+      // items loaded after sub so we know assignment_id
+      Promise.resolve({ data: null, error: null }),
+    ]);
+    if (e1) throw e1;
+    gradingSub = sub;
+
+    const { data: its, error: e3 } = await sb.from('items')
+      .select('*').eq('assignment_id', sub.assignment_id).order('order_index');
+    if (e3) throw e3;
+    gradingItems = its || [];
+
+    renderGradingModal();
+  } catch (e) {
+    document.getElementById('grading-body').innerHTML =
+      `<div style="color:var(--red)">${esc(e.message)}</div>`;
+  }
+}
+
+function renderGradingModal() {
+  const sub     = gradingSub;
+  const answers = sub.answers || {};
+  const items   = gradingItems;
+
+  // Auto-score MC + fill_blank
+  let autoScore = 0, autoMax = 0;
+  items.forEach(item => {
+    if (item.type === 'short_answer') return;
+    autoMax++;
+    const given   = String(answers[item.id] || '').trim().toLowerCase();
+    const correct = String(item.correct_answer || '').trim().toLowerCase();
+    if (given === correct) autoScore++;
+  });
+
+  const totalMax = items.length;
+
+  let html = `
+    <div style="background:var(--surface2);border-radius:var(--rs);padding:12px;margin-bottom:18px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Auto-score (MC + Fill Blank)</div>
+      <div style="font-size:22px;font-weight:600">${autoScore} <span style="color:var(--muted);font-size:14px">/ ${autoMax}</span></div>
+    </div>`;
+
+  items.forEach((item, i) => {
+    const typeLabel = { multiple_choice:'MC', fill_blank:'Fill', short_answer:'Short' }[item.type];
+    const ans = answers[item.id] || '';
+    let ansHtml = '';
+
+    if (item.type === 'multiple_choice') {
+      const opts     = item.options || [];
+      const givenIdx = parseInt(ans);
+      const corrIdx  = parseInt(item.correct_answer);
+      const correct  = givenIdx === corrIdx;
+      const givenTxt = opts[givenIdx] != null ? opts[givenIdx] : `Option ${givenIdx+1}`;
+      const corrTxt  = opts[corrIdx]  != null ? opts[corrIdx]  : `Option ${corrIdx+1}`;
+      ansHtml = `
+        <div class="ans-box ans-student">Student: ${esc(givenTxt) || '<em style="color:var(--muted)">No answer</em>'}</div>
+        <div class="ans-box ${correct ? 'ans-correct' : 'ans-wrong'}">Correct: ${esc(corrTxt)}</div>`;
+    } else if (item.type === 'fill_blank') {
+      const given   = String(ans).trim().toLowerCase();
+      const correct = String(item.correct_answer || '').trim().toLowerCase();
+      const isOk    = given === correct;
+      ansHtml = `
+        <div class="ans-box ans-student">Student: ${esc(ans) || '<em style="color:var(--muted)">No answer</em>'}</div>
+        <div class="ans-box ${isOk ? 'ans-correct' : 'ans-wrong'}">Correct: ${esc(item.correct_answer)}</div>`;
+    } else {
+      // Short answer — show response + score input
+      const savedScore = answers[`sa_${item.id}`] ?? '';
+      ansHtml = `
+        <div class="ans-box ans-student">${esc(ans) || '<em style="color:var(--muted)">No answer</em>'}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <label style="font-size:12px;color:var(--muted)">Points:</label>
+          <input type="number" id="sa-${item.id}" value="${esc(savedScore)}"
+            min="0" max="1" style="width:70px" placeholder="0"/>
+          <span style="font-size:12px;color:var(--muted)">/ 1</span>
+        </div>`;
+    }
+
+    html += `
+      <div class="grading-q">
+        <div class="grading-q-text">
+          Q${i+1} <span style="font-size:11px;color:var(--muted)">[${typeLabel}]</span>
+          ${esc(item.question)}
+        </div>
+        ${ansHtml}
+      </div>`;
+  });
+
+  html += `
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="fgroup">
+        <label>Total Score</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="number" id="total-score" value="${sub.score ?? autoScore}"
+            min="0" max="${totalMax}" style="width:90px"/>
+          <span style="color:var(--muted)">/ ${totalMax}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          Auto-calculated or override manually (include short answer points above)
+        </div>
+      </div>
+      <div class="fgroup">
+        <label>Written Feedback (optional)</label>
+        <textarea id="feedback-inp" placeholder="Well done! Work on…">${esc(sub.feedback || '')}</textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn pri" onclick="saveGrade(${totalMax})">Save Grade</button>
+        <button class="btn" onclick="closeGradingModal()">Cancel</button>
+      </div>
+    </div>`;
+
+  document.getElementById('grading-body').innerHTML = html;
+}
+
+async function saveGrade(maxScore) {
+  const score    = parseInt(document.getElementById('total-score').value) || 0;
+  const feedback = document.getElementById('feedback-inp').value.trim();
+
+  // Persist short answer point overrides back into answers JSONB
+  const updatedAnswers = { ...gradingSub.answers };
+  gradingItems.filter(i => i.type === 'short_answer').forEach(item => {
+    const inp = document.getElementById(`sa-${item.id}`);
+    if (inp) updatedAnswers[`sa_${item.id}`] = parseInt(inp.value) || 0;
+  });
+
+  try {
+    const { error } = await sb.from('submissions').update({
+      score,
+      max_score: maxScore,
+      feedback,
+      answers: updatedAnswers,
+      status: 'graded',
+      graded_at: new Date().toISOString(),
+    }).eq('id', gradingSubId);
+    if (error) throw error;
+    toast('Grade saved');
+    closeGradingModal();
+    openSubmissions(currentAsgn); // refresh submissions table
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+
+function closeGradingModal() {
+  document.getElementById('grading-modal').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+//  AI GENERATOR
+// ═══════════════════════════════════════════════
+const AI_KEY_SK = 'hw_ai_key';
+
+function saveAiKey() {
+  const key = document.getElementById('ai-key-inp').value.trim();
+  if (!key.startsWith('sk-ant-')) { toast('Key should start with sk-ant-', 'err'); return; }
+  localStorage.setItem(AI_KEY_SK, key);
+  document.getElementById('ai-key-inp').value = '';
+  document.getElementById('ai-key-status').textContent = '✓ Key saved';
+  toast('API key saved');
+}
+
+function loadAiKey() {
+  const key = localStorage.getItem(AI_KEY_SK) || '';
+  if (key) document.getElementById('ai-key-status').textContent = '✓ Key saved';
+}
+
+function appendMsg(role, text) {
+  const el = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  return div;
+}
+
+async function sendAiMessage() {
+  const key = localStorage.getItem(AI_KEY_SK);
+  if (!key) { toast('Save your Anthropic API key first', 'err'); return; }
+
+  const inp = document.getElementById('ai-inp');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  inp.value = '';
+  appendMsg('user', text);
+  const thinking = appendMsg('ai thinking', '✦ Thinking…');
+
+  const systemPrompt = `You are a homework generator for an English language tutor.
+The teacher will describe what homework they want and you generate it.
+
+You MUST respond with ONLY valid JSON — no explanation, no markdown, no code block. Just raw JSON.
+
+Format:
+{
+  "title": "Short assignment title",
+  "description": "One sentence description or null",
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "Question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct_answer": "0"
+    },
+    {
+      "type": "fill_blank",
+      "question": "She ___ to school every day.",
+      "correct_answer": "goes"
+    },
+    {
+      "type": "short_answer",
+      "question": "Describe your daily routine in 2-3 sentences."
+    }
+  ]
+}
+
+Rules:
+- multiple_choice: options array (2-6 items), correct_answer is the index as a string ("0","1","2"…)
+- fill_blank: question contains exactly one ___, correct_answer is the expected word/phrase
+- short_answer: no correct_answer needed
+- Mix question types when it makes sense
+- Generate 4-8 questions unless teacher specifies
+- Make questions appropriate for English learners`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: text }],
+      }),
+    });
+
+    const data = await res.json();
+    thinking.remove();
+
+    if (!res.ok) {
+      appendMsg('ai', `Error: ${data.error?.message || res.statusText}`);
+      return;
+    }
+
+    const raw = data.content?.[0]?.text || '';
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // Try to extract JSON if Claude wrapped it anyway
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else { appendMsg('ai', 'Could not parse response. Try again.'); return; }
+    }
+
+    // Preview the result
+    const qCount = parsed.questions?.length || 0;
+    const preview = appendMsg('ai', `✓ Generated "${parsed.title}" — ${qCount} questions\n\nClick below to create this assignment ↓`);
+
+    // Create-button message
+    const btn = appendMsg('created', `📝 Create "${parsed.title}" →`);
+    btn.onclick = () => createFromAi(parsed, btn);
+
+  } catch (e) {
+    thinking.remove();
+    appendMsg('ai', `Error: ${e.message}`);
+  }
+}
+
+async function createFromAi(parsed, btnEl) {
+  btnEl.textContent = '⏳ Creating…';
+  btnEl.onclick = null;
+  try {
+    // Create assignment
+    const { data: asgn, error: e1 } = await sb.from('assignments').insert({
+      title: parsed.title,
+      description: parsed.description || null,
+      due_date: null,
+    }).select().single();
+    if (e1) throw e1;
+
+    // Insert questions
+    if (parsed.questions?.length) {
+      const items = parsed.questions.map((q, i) => ({
+        assignment_id: asgn.id,
+        type: q.type,
+        question: q.question,
+        options: q.options || null,
+        correct_answer: q.correct_answer ?? null,
+        order_index: i,
+      }));
+      const { error: e2 } = await sb.from('items').insert(items);
+      if (e2) throw e2;
+    }
+
+    btnEl.textContent = `✓ Created! Opening builder…`;
+    btnEl.style.cursor = 'default';
+    toast(`Created "${parsed.title}"`);
+    await loadAssignments();
+    setTimeout(() => openBuilder(asgn.id), 600);
+  } catch(e) {
+    btnEl.textContent = '✗ Failed — click to retry';
+    btnEl.onclick = () => createFromAi(parsed, btnEl);
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SYNC FROM WORK TAB
+// ═══════════════════════════════════════════════
+async function syncFromWork() {
+  // Read the brain app's localStorage data (same domain = shared storage)
+  let workData;
+  try {
+    workData = JSON.parse(localStorage.getItem('mind_work_v8') || 'null');
+  } catch(e) {
+    toast('Could not read Work tab data', 'err'); return;
+  }
+  if (!workData?.students?.length) {
+    toast('No students found in Work tab', 'err'); return;
+  }
+
+  // Only active (non-archived) students
+  const active = workData.students.filter(s => !s.archived);
+  if (!active.length) { toast('No active students in Work tab', 'err'); return; }
+
+  // Fetch existing students from Supabase to avoid duplicates
+  const { data: existing, error } = await sb.from('students').select('name');
+  if (error) { toast(error.message, 'err'); return; }
+
+  const existingNames = new Set((existing || []).map(s => s.name.trim().toLowerCase()));
+  const toAdd = active.filter(s => !existingNames.has(s.name.trim().toLowerCase()));
+
+  if (!toAdd.length) {
+    toast('All Work tab students are already synced!'); return;
+  }
+
+  const names = toAdd.map(s => s.name).join(', ');
+  if (!confirm(`Add ${toAdd.length} student(s) to Homework?\n\n${names}`)) return;
+
+  try {
+    const rows = toAdd.map(s => ({ name: s.name.trim(), token: genToken() }));
+    const { error: e2 } = await sb.from('students').insert(rows);
+    if (e2) throw e2;
+    toast(`Synced ${toAdd.length} student(s) from Work tab`);
+    loadStudents();
+  } catch(e) {
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PROGRESS TEST VIEW
+// ═══════════════════════════════════════════════
+
+const PT_SECTIONS = [
+
+// ─────────────────────────────────────────────────────────────
+// PART 1 — VOCABULARY IN USE
+// Cambridge B1 style: multiple-choice cloze (Part 5 format)
+// Choose the correct word to complete each gap.
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'vocab',
+  label: 'Part 1 — Vocabulary',
+  type: 'cloze_mc',
+  instructions: 'Choose the correct word (A, B, C or D) to complete each gap.',
+  passage: `My sister Maya is one of the most (1)___ people I know. She is always happy to listen to other people's ideas and never judges anyone. She is really (2)___ about photography — she goes out with her camera every weekend and takes pictures of the sea shore near our house. She says the light is most beautiful just after sunrise, when the water begins to (3)___ and the birds start flying overhead. Their (4)___ catch the light in a way that looks almost magical.\n\nMaya doesn't just (5)___ her photographs at home. Last year she entered a local (6)___, and one of her pictures won first prize. She was so surprised she almost (7)___ over when they announced her name! Afterwards, I asked her to (8)___ me some money so I could buy a camera of my own — I wanted to (9)___ in touch with what she loves. She agreed straightaway. That's just the (10)___ of person she is — kind, generous, and passionate about everything she does.`,
+  questions: [
+    { id:'v1', gap:1, opts:['A. open-minded','B. interested','C. tiny','D. polluted'], ans:'A' },
+    { id:'v2', gap:2, opts:['A. dependent','B. crazy','C. pleased','D. reunited'], ans:'B' },
+    { id:'v3', gap:3, opts:['A. creep','B. rescue','C. shine','D. return'], ans:'C' },
+    { id:'v4', gap:4, opts:['A. surveys','B. advertisements','C. feathers','D. relatives'], ans:'C' },
+    { id:'v5', gap:5, opts:['A. keep','B. lend','C. look','D. depend'], ans:'A' },
+    { id:'v6', gap:6, opts:['A. survey','B. advertisement','C. newsagent\'s','D. countryside'], ans:'A' },
+    { id:'v7', gap:7, opts:['A. rescued','B. fell','C. laughed','D. crept'], ans:'B' },
+    { id:'v8', gap:8, opts:['A. borrow','B. rescue','C. lend','D. keep'], ans:'C' },
+    { id:'v9', gap:9, opts:['A. come','B. keep','C. fall','D. turn'], ans:'B' },
+    { id:'v10', gap:10, opts:['A. own','B. sort','C. apart','D. tiny'], ans:'B' },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 2 — GRAMMAR: OPEN CLOZE
+// Cambridge B1 style: Part 6 format — no options given.
+// Write ONE word to complete each gap.
+// Tests: articles, quantifiers, verb+prep, some/any/no,
+//        although/however/so, -ing/-ed, state verbs, time preps
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'grammar',
+  label: 'Part 2 — Grammar',
+  type: 'open_cloze',
+  instructions: 'Write ONE word to fill each gap. There is only one correct answer for each gap.',
+  passage: `My neighbour Carlos lives on (1)___ first floor of our building. He is (2)___ interesting person — he knows a lot about almost every subject. He has been (3)___ in languages since he was a child. Although he is very busy, he (4)___ a little time every day to read. He (5)___ believe in wasting a single minute — that is just how he thinks.\n\nLast Saturday I saw him in the delicatessen buying (6)___ loaf of bread and a packet of coffee. He looked (7)___ in a hurry, so I didn't stop him for long. He told me he was going (8)___ a walk along the sea shore and would come back by lunchtime. The weather was a (9)___ cold, but (10)___ that, it was a perfect morning for a walk. He waved goodbye and walked away (11)___. I watched him until he turned the corner. I (12)___ always liked people who are passionate about the simple things in life — it is something I find very beautiful.`,
+  questions: [
+    { id:'g1',  gap:1,  ans:'the',      hint:'definite article' },
+    { id:'g2',  gap:2,  ans:'an',       hint:'indefinite article' },
+    { id:'g3',  gap:3,  ans:'interested', hint:'adjective + in' },
+    { id:'g4',  gap:4,  ans:'finds',    hint:'present simple, state verb' },
+    { id:'g5',  gap:5,  ans:'does',     hint:'auxiliary for emphasis' },
+    { id:'g6',  gap:6,  ans:'a',        hint:'container expression: a ___ of' },
+    { id:'g7',  gap:7,  ans:'as',       hint:'as if / as though OR: looked as if' },
+    { id:'g8',  gap:8,  ans:'for',      hint:'go for a walk' },
+    { id:'g9',  gap:9,  ans:'bit',      hint:'a bit + adjective' },
+    { id:'g10', gap:10, ans:'apart',    hint:'apart from that' },
+    { id:'g11', gap:11, ans:'urgently', hint:'adverb from urgent' },
+    { id:'g12', gap:12, ans:'have',     hint:'present perfect: I have always liked' },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 3 — READING COMPREHENSION
+// Cambridge B1 style: Part 3 (long text + MC) + Part 4 (gapped text)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'reading',
+  label: 'Part 3 — Reading',
+  type: 'reading',
+  instructions: 'Read the article below and answer the questions.',
+  passage: `THE COUNTRYSIDE SHOP THAT BECAME A COMMUNITY\n\nWhen the last newsagent\'s in the village of Ashdale closed its doors three years ago, many residents thought that was the end. For years the little shop on the high street had been more than just a place to buy a newspaper or a loaf of bread. It was somewhere people came to talk, to share news, and simply to feel less alone in a small, polluted corner of a busy world.\n\nThen Sara Whitfield moved back to the village after living abroad. Sara, who is open-minded and passionate about community life, had an idea. She asked residents whether they would be interested in running the shop together as a community business. The response was immediate. "I was nearly knocked over by how quickly people agreed," she said, laughing. "I thought there would be a long survey, lots of discussions — but within a week, over sixty people had signed up."\n\nThe shop — now called The Corner — opened six months later. It sells everything from a bunch of fresh flowers to a box of local cheese. There is a small delicatessen section where visitors can buy unusual foods, as well as a chemist\'s counter for everyday medicines. On Friday evenings it becomes a meeting place where relatives who live far apart come to catch up over coffee.\n\nNot everything has been easy. Sara admits that although the idea was simple, the reality was sometimes stressful. "There were moments when I felt like giving up," she says. "However, every time that happened, someone would come in and say how much the shop had changed their life — and that feeling was worth more than anything." The shop now employs twelve local people and has won a national award for its work in the community.\n\nSara\'s advice to anyone thinking of a similar project is straightforward: depend on your neighbours, keep in touch with what matters to people, and never underestimate how much a tiny shop can do for a community.`,
+  questions: [
+    { id:'r1', type:'mc4',
+      q:'What is the main purpose of this article?',
+      opts:['A. To advertise a new type of shop','B. To describe how a community saved its local shop','C. To explain why village shops are closing','D. To give advice about running a business'],
+      ans:'B' },
+    { id:'r2', type:'mc4',
+      q:'How did people in Ashdale react to Sara\'s idea?',
+      opts:['A. They wanted more time to think about it','B. They organised a long survey first','C. They agreed very quickly','D. Only a few people were interested'],
+      ans:'C' },
+    { id:'r3', type:'mc4',
+      q:'What does Sara mean when she says she was "nearly knocked over"?',
+      opts:['A. She fell over in the shop','B. She was extremely surprised by people\'s enthusiasm','C. There were too many people in the room','D. She was disappointed by the reaction'],
+      ans:'B' },
+    { id:'r4', type:'mc4',
+      q:'Which of the following does The Corner NOT sell, according to the article?',
+      opts:['A. Fresh flowers','B. Local cheese','C. Second-hand books','D. Everyday medicines'],
+      ans:'C' },
+    { id:'r5', type:'mc4',
+      q:'What kept Sara going when things were difficult?',
+      opts:['A. Winning a national award','B. Hearing how the shop had changed people\'s lives','C. The money the shop was making','D. Support from the local government'],
+      ans:'B' },
+    // Gapped text — Cambridge Part 4 style
+    { id:'r6', type:'gapped_sentences',
+      instructions:'Five sentences have been removed from the article below. Choose from sentences A–G the one which fits each gap. There are TWO extra sentences you do not need to use.',
+      passage:`Every Saturday morning, twelve-year-old Mia gets up early — even if it means giving up her usual lie-in. (1)___. Her grandmother lives on the first floor of a block near the sea shore, just a fifteen-minute walk away.\n\nMia loves these visits. (2)___. Her grandmother always has a story to tell — about relatives who moved away, about the countryside she grew up in, or about the tiny flat she used to own in the city.\n\nOne Saturday, her grandmother seemed unusually quiet. (3)___. Mia asked what was wrong. After a moment, her grandmother smiled and said she had just been thinking about the past.\n\n(4)___. Mia put her arm around her and they sat together looking out of the window at the sea. Later, Mia helped make lunch — a fresh loaf from the delicatessen on the corner, a bowl of soup, and a slice of lemon cake.\n\nAs she walked home that afternoon, Mia felt something she couldn\'t quite name. (5)___. She decided to come back the following Saturday — and the one after that.`,
+      options: {
+        'A': 'It wasn\'t sadness exactly — more like a warm, serious feeling.',
+        'B': 'She creeps out of bed, gets dressed quickly, and goes to visit her grandmother.',
+        'C': 'She was embarrassed by how little she had visited recently.',
+        'D': 'Apart from the conversation, she also liked the journey itself.',
+        'E': 'She was sitting by the window and didn\'t say anything when Mia arrived.',
+        'F': 'Mia didn\'t say anything either.',
+        'G': 'They reunited after several months apart.'
+      },
+      answers: { 1:'B', 2:'D', 3:'E', 4:'F', 5:'A' }
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 4 — WRITING
+// Cambridge B1 style: Part 1 (email/message) + Part 2 (article/story)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'writing',
+  label: 'Part 4 — Writing',
+  type: 'writing',
+  instructions: 'Complete both writing tasks. Write in full sentences.',
+  questions: [
+    {
+      id: 'w1',
+      type: 'email',
+      label: 'Task 1 — Email (around 100 words)',
+      prompt: `You have received this email from your English friend, Sam:\n\n"Hi! I'm writing an article about how young people spend their weekends. Can you help me? I'd love to know: Do you have a lie in, or do you get up early? What do you usually do — go for a walk, meet friends, stay at home? Is there anything you are really crazy about that you do every weekend? Thanks!"\n\nWrite an email to Sam answering all his questions. Write around 100 words.`,
+      minWords: 80,
+      checklist: ['do/don\'t have a lie in','what you do on weekends','something you are crazy about']
+    },
+    {
+      id: 'w2',
+      type: 'article',
+      label: 'Task 2 — Article (around 100 words)',
+      prompt: `You have seen this notice on an English-language website:\n\n"Articles wanted: MY NEIGHBOURHOOD\nTell us about where you live! What shops are nearby? What do you like about it? What would you change? The best articles will be published on our website."\n\nWrite your article. Include: what shops or places are near your home, what you like about your neighbourhood (use although or however), and one thing you would change. Write around 100 words.`,
+      minWords: 80,
+      checklist: ['mention at least one specific shop','use although OR however','say what you would change']
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 5 — SPEAKING
+// Cambridge B1 style: Part 1 (personal questions) + Part 2 (photo
+// description) + Part 3 (collaborative task) + Part 4 (discussion)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'speaking',
+  label: 'Part 5 — Speaking',
+  type: 'speaking',
+  instructions: 'Record your answer for each task. Listen to the instructions before you start.',
+  questions: [
+    {
+      id: 's1',
+      label: 'Part A — Personal questions (1–2 minutes)',
+      q: 'Answer these questions as if you are talking to an examiner. Speak naturally — don\'t read from notes.\n\n1. Where do you live, and what is your neighbourhood like?\n2. What do you usually do at weekends? Do you prefer going out or staying at home?\n3. Is there something you are really crazy about — a hobby or interest you do every week?\n4. Tell me about someone in your family. What are they like?',
+      tip: 'Aim for full sentences. Use words like: "I usually…", "Actually…", "Apart from that…", "I\'m really into…", "It depends on…"',
+      duration: '90 seconds'
+    },
+    {
+      id: 's2',
+      label: 'Part B — Describe a photo (1 minute)',
+      q: 'Imagine you can see a photo of a busy street with different shops — a chemist\'s, a newsagent\'s and a small delicatessen. Some people are walking past. An older woman is carrying a loaf of bread. A child is looking in the window of the clothes shop.\n\nDescribe this photo in as much detail as you can. Say what you can see, where things are, and what you think is happening.',
+      tip: 'Useful phrases: "In the foreground…", "On the left / right…", "I can see…", "It looks as if…", "The woman seems to be…", "There are a few people…", "In the background…"',
+      duration: '60 seconds'
+    },
+    {
+      id: 's3',
+      label: 'Part C — Discussion task (90 seconds)',
+      q: 'Imagine you and a friend are planning a weekend trip to the countryside. You need to decide:\n\n• Whether to go for a long walk or visit the local village shops\n• Whether to bring a packed lunch (a loaf of bread, a bunch of grapes, a packet of biscuits) or eat at a café\n• What to do if the weather is a bit cold and polluted-feeling\n\nTalk through your ideas. Make a decision and give your reasons.',
+      tip: 'Useful phrases: "I think we should…", "It depends on…", "Although it\'s cold, we could…", "However, if it rains…", "What about…?", "I\'d rather… because…"',
+      duration: '90 seconds'
+    }
+  ]
+}
+
+];
+
+
+
+function initProgressView() {
+  // Set Aida's test link
+  const base = location.href.replace(/[^/]*$/, '');
+  const link = `${base}student.html?test=progress`;
+  document.getElementById('aida-test-link').textContent = link;
+
+  renderPtQuestions();
+  loadPtSubmissions();
+}
+
+function copyAidaLink() {
+  const link = document.getElementById('aida-test-link').textContent;
+  navigator.clipboard.writeText(link)
+    .then(() => toast('Link copied!'))
+    .catch(() => toast('Could not copy', 'err'));
+}
+
+function showPtTab(tab) {
+  ['questions','submissions'].forEach(t => {
+    document.getElementById(`pt-panel-${t}`).style.display = t === tab ? 'block' : 'none';
+    const btn = document.getElementById(`pttab-${t}`);
+    if (btn) {
+      btn.style.borderBottom = t === tab ? '2px solid var(--cyan)' : '2px solid transparent';
+      btn.style.color = t === tab ? 'var(--cyan)' : '';
+    }
+  });
+}
+
+function renderPtQuestions() {
+  const body = document.getElementById('pt-questions-body');
+  let html = '';
+  let qNum = 0;
+
+  const typeLabel = {mc:'Multiple choice', fill:'Fill in blank', tf:'True / False',
+    match:'Matching', rewrite:'Rewrite', short:'Short answer', writing:'Writing', speaking:'Speaking'};
+
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section-hd">${esc(sec.label)}</div>`;
+    if (sec.instructions) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">${esc(sec.instructions)}</div>`;
+
+    if (sec.passage) {
+      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:var(--ink);white-space:pre-wrap">${esc(sec.passage)}</div>`;
+    }
+
+    sec.questions.forEach(q => {
+      qNum++;
+      const tl = typeLabel[q.type] || q.type;
+      html += `<div class="pt-q-row">
+        <div class="pt-q-meta">
+          <span>Q${qNum}</span>
+          <span class="pt-type-badge">${tl}</span>
+        </div>
+        <div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+
+      if (q.type === 'mc') {
+        html += `<div class="pt-opts-preview">`;
+        q.opts.forEach((opt, i) => {
+          html += `<div class="pt-opt-preview ${i === q.ans ? 'correct-opt' : ''}">
+            ${i === q.ans ? '✓' : '○'} ${esc(opt)}</div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'tf') {
+        html += `<div class="pt-opts-preview">
+          <div class="pt-opt-preview ${q.ans==='True'?'correct-opt':''}">${q.ans==='True'?'✓':'○'} True</div>
+          <div class="pt-opt-preview ${q.ans==='False'?'correct-opt':''}">${q.ans==='False'?'✓':'○'} False</div>
+        </div>`;
+
+      } else if (q.type === 'fill' || q.type === 'rewrite') {
+        if (q.hint) html += `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:6px">${esc(q.hint)}</div>`;
+        html += `<div class="pt-answer-key">✓ Answer: ${esc(q.ans)}</div>`;
+
+      } else if (q.type === 'match') {
+        html += `<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">`;
+        q.pairs.forEach(pair => {
+          html += `<div style="display:flex;gap:10px;font-size:13px;align-items:center">
+            <span style="background:var(--surface2);padding:4px 10px;border-radius:var(--rs);border:1px solid var(--border);min-width:120px">${esc(pair[0])}</span>
+            <span style="color:var(--muted)">→</span>
+            <span style="color:var(--green)">${esc(pair[1])}</span>
+          </div>`;
+        });
+        html += `</div>`;
+
+      } else if (q.type === 'speaking') {
+        html += `<div class="pt-speaking-prompt">${esc(q.tip)}</div>`;
+        if (q.duration) html += `<div class="pt-speaking-tip">Target: ${esc(q.duration)}</div>`;
+
+      } else if (q.type === 'writing') {
+        if (q.minWords) html += `<div class="pt-speaking-tip">Min. ${q.minWords} words — graded manually</div>`;
+
+      } else {
+        html += `<div class="pt-speaking-tip">Open answer — graded manually</div>`;
+      }
+
+      html += `</div>`;
+    });
+  });
+
+  body.innerHTML = html;
+}
+
+// ── Load Aida's submission from Supabase ─────────
+// We store progress test submissions in a dedicated table or
+// fall back to checking submissions table with assignment_id = 'progress_test_aida'
+// For simplicity: we use a special assignment with title matching the test slug.
+async function loadPtSubmissions() {
+  const el = document.getElementById('pt-submissions-body');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+
+  try {
+    // Look for a student named Aida
+    const { data: aida, error: e1 } = await sb.from('students')
+      .select('*').ilike('name','%aida%').maybeSingle();
+    if (e1) throw e1;
+
+    if (!aida) {
+      el.innerHTML = `<div style="color:var(--muted);font-size:13px">
+        No student named "Aida" found in the database yet.
+        Add her in the Students tab first, or wait for her to submit the test.
+      </div>`;
+      return;
+    }
+
+    // Look for progress test submissions — we tag them with assignment_id = null and a special field
+    // OR we check the special progress_test_submissions table if it exists
+    // Best approach: use submissions table with a sentinel assignment_id we create once
+    await ensurePtAssignment(aida);
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--red);font-size:13px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+let ptAsgnId = null;
+
+async function ensurePtAssignment(aida) {
+  // Check if a progress test assignment exists
+  const { data: existing } = await sb.from('assignments')
+    .select('id').eq('title','[Progress Test] Aida — End-of-Course').maybeSingle();
+
+  if (existing) {
+    ptAsgnId = existing.id;
+  } else {
+    // Create it
+    const { data: created, error } = await sb.from('assignments').insert({
+      title: '[Progress Test] Aida — End-of-Course',
+      description: 'Auto-generated progress test — do not edit manually',
+    }).select().single();
+    if (error) throw error;
+    ptAsgnId = created.id;
+    // Assign to Aida
+    await sb.from('student_assignments').insert({
+      student_id: aida.id,
+      assignment_id: ptAsgnId
+    });
+  }
+
+  // Now load submission
+  const { data: sub } = await sb.from('submissions')
+    .select('*').eq('student_id', aida.id).eq('assignment_id', ptAsgnId).maybeSingle();
+
+  renderPtSubmissions(aida, sub);
+}
+
+function ptTeacherAutoScore(q, answers) {
+  const ans = answers[q.id];
+  if (q.type === 'mc') {
+    const ok = parseInt(ans) === q.ans;
+    return { scored:true, ok, givenLabel: q.opts[parseInt(ans)] ?? '(no answer)', correctLabel: q.opts[q.ans] };
+  } else if (q.type === 'fill' || q.type === 'rewrite') {
+    const given   = String(ans||'').trim().toLowerCase().replace(/[.!?]$/,'');
+    const correct = String(q.ans||'').trim().toLowerCase().replace(/[.!?]$/,'');
+    return { scored:true, ok: given===correct, givenLabel: ans||'(blank)', correctLabel: q.ans };
+  } else if (q.type === 'tf') {
+    const ok = String(ans||'').toLowerCase() === String(q.ans).toLowerCase();
+    return { scored:true, ok, givenLabel: ans||'(no answer)', correctLabel: q.ans };
+  } else if (q.type === 'match') {
+    if (!ans || typeof ans !== 'object') return { scored:true, ok:false };
+    const allOk = q.pairs.every((_,i) => parseInt(ans[i]) === i);
+    return { scored:true, ok:allOk, matchDetail: q.pairs.map((p,i) => ({
+      term: p[0], correct: p[1],
+      given: q.pairs[parseInt(ans[i])]?.[1] ?? '(not chosen)',
+      ok: parseInt(ans[i]) === i
+    })) };
+  }
+  return { scored:false, ok:false };
+}
+
+function renderPtSubmissions(aida, sub) {
+  const el = document.getElementById('pt-submissions-body');
+
+  if (!sub) {
+    el.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;font-size:13px;color:var(--muted)">
+        <strong style="color:var(--ink)">${esc(aida.name)}</strong> hasn't submitted yet.
+        Send her this link:<br><br>
+        <span style="font-family:monospace;font-size:12px">${document.getElementById('aida-test-link').textContent}</span>
+      </div>`;
+    return;
+  }
+
+  const answers = sub.answers || {};
+  const allQs   = PT_SECTIONS.flatMap(s => s.questions);
+  const notes   = sub.feedback_notes || {};
+
+  // Auto-score
+  let autoScore = 0, autoMax = 0;
+  allQs.forEach(q => {
+    const { scored, ok } = ptTeacherAutoScore(q, answers);
+    if (scored) { autoMax++; if (ok) autoScore++; }
+  });
+
+  const typeLabel = {mc:'MC', fill:'Fill', tf:'T/F', match:'Match', rewrite:'Rewrite',
+    short:'Short answer', writing:'Writing', speaking:'Speaking'};
+
+  let html = `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Student</div>
+        <div style="font-size:15px;font-weight:600">${esc(aida.name)}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Submitted</div>
+        <div style="font-size:13px">${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '—'}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Auto-score</div>
+        <div style="font-size:20px;font-weight:600;color:var(--cyan)">${autoScore} / ${autoMax}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Status</div>
+        <div style="font-size:13px">${sub.status === 'graded'
+          ? `<span style="color:var(--green)">Graded — ${sub.score}/${sub.max_score}</span>`
+          : '<span style="color:var(--yellow)">Needs grading</span>'}</div></div>
+    </div>`;
+
+  let qNum = 0;
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section-hd">${esc(sec.label)}</div>`;
+    if (sec.passage) {
+      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:12px 14px;margin-bottom:12px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-wrap">${esc(sec.passage)}</div>`;
+    }
+    sec.questions.forEach(q => {
+      qNum++;
+      const tl = typeLabel[q.type] || q.type;
+      const { scored, ok, givenLabel, correctLabel, matchDetail } = ptTeacherAutoScore(q, answers);
+      const ans = answers[q.id];
+
+      html += `<div class="pt-answer-block">
+        <div class="pt-q-label">Q${qNum} · ${tl}</div>
+        <div class="pt-q-body">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+
+      if (scored) {
+        if (q.type === 'match' && matchDetail) {
+          matchDetail.forEach(m => {
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px">
+              <span class="pt-auto-tag ${m.ok?'pt-auto-ok':'pt-auto-bad'}" style="flex-shrink:0">${m.ok?'✓':'✗'}</span>
+              <span style="min-width:110px;color:var(--ink)">${esc(m.term)}</span>
+              <span style="color:var(--muted)">→</span>
+              <span style="${m.ok?'color:var(--green)':'color:var(--red)'}">${esc(m.given)}</span>
+              ${!m.ok ? `<span style="color:var(--muted);font-size:12px">(correct: ${esc(m.correct)})</span>` : ''}
+            </div>`;
+          });
+        } else {
+          html += `<div class="pt-student-ans">${esc(givenLabel)}</div>
+            <div style="margin-top:5px">
+              <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+              ${!ok && correctLabel ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: ${esc(correctLabel)}</span>` : ''}
+            </div>`;
+        }
+      } else if (q.type === 'writing' || q.type === 'short') {
+        html += `<div class="pt-student-ans">${esc(ans) || '<em style="color:var(--muted)">No answer</em>'}</div>`;
+        const wc = ans ? ans.trim().split(/\s+/).length : 0;
+        if (wc) html += `<div style="font-size:11px;color:var(--muted);margin-top:3px">${wc} words</div>`;
+        html += `<div style="margin-top:8px">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Feedback / notes:</label>
+          <textarea id="pt-note-${q.id}" placeholder="Write feedback here…" style="width:100%;min-height:60px;resize:vertical">${esc(notes[q.id]||'')}</textarea>
+        </div>`;
+      } else if (q.type === 'speaking') {
+        html += `<div style="font-size:13px;color:var(--muted);font-style:italic">Voice message — check WhatsApp/Telegram.</div>`;
+        html += `<div style="margin-top:8px">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Speaking feedback:</label>
+          <textarea id="pt-note-${q.id}" placeholder="Fluency, pronunciation, vocabulary, grammar…" style="width:100%;min-height:60px;resize:vertical">${esc(notes[q.id]||'')}</textarea>
+        </div>`;
+      }
+
+      html += `</div>`;
+    });
+  });
+
+  html += `
+    <div class="pt-grade-inputs">
+      <div class="fgroup">
+        <label>Overall score</label>
+        <div class="pt-score-row">
+          <input type="number" id="pt-total-score" value="${sub.score ?? autoScore}" min="0" max="${allQs.length}" style="width:80px"/>
+          <span style="color:var(--muted);font-size:13px">/ ${allQs.length} &nbsp;·&nbsp; ${autoMax} auto-scored, ${allQs.length - autoMax} manual</span>
+        </div>
+      </div>
+      <div class="fgroup">
+        <label>Overall feedback for ${esc(aida.name)}</label>
+        <textarea id="pt-feedback" placeholder="Overall feedback — well done on…, work on…">${esc(sub.feedback||'')}</textarea>
+      </div>
+      <button class="btn pri" onclick="savePtGrade('${sub.id}','${aida.id}',${allQs.length})">Save Grade</button>
+    </div>`;
+
+  el.innerHTML = html;
+}
+
+async function savePtGrade(subId, studentId, maxScore) {
+  const score    = parseInt(document.getElementById('pt-total-score').value) || 0;
+  const feedback = document.getElementById('pt-feedback').value.trim();
+
+  // Collect per-question notes
+  const feedbackNotes = {};
+  PT_SECTIONS.flatMap(s => s.questions).forEach(q => {
+    const el = document.getElementById(`pt-note-${q.id}`);
+    if (el && el.value.trim()) feedbackNotes[q.id] = el.value.trim();
+  });
+
+  try {
+    const { error } = await sb.from('submissions').update({
+      score,
+      max_score: maxScore,
+      feedback,
+      feedback_notes: feedbackNotes,
+      status: 'graded',
+      graded_at: new Date().toISOString(),
+    }).eq('id', subId);
+    if (error) throw error;
+    toast('Grade saved!');
+  } catch(e) {
+    toast(e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+loadStudents();
+loadAiKey();
+</script>
+</body>
+</html>

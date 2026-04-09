@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Homework</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0b;--surface:#1a1816;--surface2:#222018;
+  --border:#2e2b26;--ink:#e8e4dc;--muted:#8a8680;--subtle:#3d3a35;
+  --cyan:#06b6d4;--cyan-d:#0891b2;--cyan-bg:rgba(6,182,212,.1);
+  --green:#5aaf7a;--green-bg:#0d1f14;
+  --red:#e85a5a;--red-bg:#2a0f0f;
+  --yellow:#f0c040;--yellow-bg:rgba(240,192,64,.1);
+  --r:10px;--rs:6px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6}
+
+/* ── PAGE SHELL ── */
+.page{min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#090807;border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.brand{font-size:16px;font-weight:600;color:var(--ink)}
+.brand span{color:var(--cyan)}
+.student-name-tag{margin-left:auto;font-size:13px;color:var(--muted)}
+
+.container{flex:1;padding:28px 20px;max-width:680px;margin:0 auto;width:100%}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;font-size:14px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--cyan-d);border-color:var(--cyan-d);color:#fff}
+.btn.pri:hover{background:var(--cyan);border-color:var(--cyan)}
+.btn.sm{padding:6px 13px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.full{width:100%}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],textarea{
+  font-family:inherit;font-size:15px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--ink);padding:10px 13px;outline:none;transition:border-color .12s;width:100%
+}
+input:focus,textarea:focus{border-color:var(--cyan)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:90px}
+
+/* ── LOADING / ERROR ── */
+.center-msg{text-align:center;padding:60px 20px;color:var(--muted)}
+.center-msg .big{font-size:36px;margin-bottom:12px}
+.loading-spin{display:flex;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--muted)}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ASSIGNMENT LIST ── */
+.list-header{margin-bottom:20px}
+.list-title{font-size:22px;font-weight:600}
+.list-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+.asgn-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:16px}
+.asgn-card:hover{border-color:var(--cyan);background:var(--surface2)}
+.asgn-card.done{cursor:default;opacity:.75}
+.asgn-info{flex:1;min-width:0}
+.asgn-title{font-size:16px;font-weight:500;margin-bottom:3px}
+.asgn-due{font-size:12px;color:var(--muted)}
+.asgn-status{flex-shrink:0}
+
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.badge-new{background:var(--cyan-bg);color:var(--cyan)}
+.badge-submitted{background:rgba(90,175,122,.12);color:var(--green)}
+.badge-graded{background:var(--green-bg);color:var(--green)}
+.badge-score{background:var(--surface2);color:var(--ink)}
+
+/* ── ASSIGNMENT TAKING ── */
+.taking-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:24px}
+.back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:24px;padding:0 4px;line-height:1;transition:color .12s;flex-shrink:0;margin-top:2px}
+.back-btn:hover{color:var(--ink)}
+.taking-title{font-size:20px;font-weight:600;flex:1}
+.taking-due{font-size:12px;color:var(--muted);margin-top:2px}
+
+.question-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.q-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5}
+
+/* Multiple choice */
+.mc-options{display:flex;flex-direction:column;gap:8px}
+.mc-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none}
+.mc-opt:hover{border-color:var(--cyan);background:rgba(6,182,212,.05)}
+.mc-opt.selected{border-color:var(--cyan);background:var(--cyan-bg)}
+.mc-opt input[type=radio]{width:auto;accent-color:var(--cyan);cursor:pointer;flex-shrink:0}
+.mc-opt-label{font-size:14px}
+
+/* Fill in the blank */
+.fill-sentence{font-size:15px;line-height:2;flex-wrap:wrap}
+.fill-inp{
+  display:inline-block;width:auto;min-width:100px;max-width:200px;
+  padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;
+  border-radius:0;background:transparent;color:var(--ink);font-size:15px;
+  outline:none;vertical-align:middle
+}
+.fill-inp:focus{border-bottom-color:var(--cyan);background:rgba(6,182,212,.06)}
+
+/* Submit / results */
+.submit-area{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.result-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.result-score{font-size:36px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+.result-label{font-size:13px;color:var(--muted)}
+.result-feedback{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:14px;line-height:1.6;color:var(--ink)}
+.result-feedback-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+
+/* Success banner */
+.success-banner{background:var(--green-bg);border:1px solid rgba(90,175,122,.3);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:20px}
+.success-icon{font-size:32px;margin-bottom:8px}
+.success-title{font-size:18px;font-weight:600;color:var(--green)}
+.success-sub{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── PROGRESS TEST ── */
+.pt-hero{text-align:center;padding:32px 0 24px}
+.pt-hero-title{font-size:24px;font-weight:700;margin-bottom:6px}
+.pt-hero-sub{font-size:14px;color:var(--muted)}
+.pt-hero-badge{display:inline-block;background:var(--cyan-bg);color:var(--cyan);font-size:12px;font-weight:600;padding:4px 14px;border-radius:99px;margin-bottom:14px;letter-spacing:.04em}
+.pt-section{margin-bottom:28px}
+.pt-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pt-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.pt-q-num{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:5px}
+.pt-q-text{font-size:15px;font-weight:500;line-height:1.55;margin-bottom:12px}
+.pt-q-text em{font-style:italic;color:var(--muted);font-weight:400;font-size:14px}
+.pt-opts{display:flex;flex-direction:column;gap:7px}
+.pt-opt{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .12s;user-select:none;font-size:14px;color:var(--ink)}
+.pt-opt:hover{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.sel{border-color:var(--cyan);background:var(--cyan-bg)}
+.pt-opt.correct{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.pt-opt.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.pt-fill{width:100%;margin-top:4px}
+.pt-textarea{width:100%;margin-top:4px;min-height:72px}
+.pt-fill-inline{display:inline-block;width:auto;min-width:110px;max-width:180px;padding:2px 8px;border-bottom:2px solid var(--cyan);border-top:none;border-left:none;border-right:none;border-radius:0;background:transparent;color:var(--ink);font-size:15px;outline:none;vertical-align:middle;font-family:inherit}
+.pt-fill-inline:focus{background:rgba(6,182,212,.06)}
+.pt-speaking-prompt{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:14px;color:var(--ink);line-height:1.6;margin-bottom:10px}
+.pt-speaking-note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.pt-voice-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--ink);transition:all .12s;font-family:inherit}
+.pt-voice-btn:hover{border-color:var(--cyan)}
+.pt-voice-btn.recording{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.pt-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.pt-dot.rec{background:var(--red);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pt-audio-wrap{margin-top:8px}
+.pt-audio-wrap audio{width:100%;height:36px}
+.pt-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.pt-progress-fill{height:4px;background:var(--cyan);border-radius:2px;transition:width .4s}
+.pt-score-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:20px}
+.pt-score-num{font-size:48px;font-weight:700;color:var(--cyan)}
+.pt-score-label{font-size:14px;color:var(--muted);margin-top:4px}
+.pt-score-msg{font-size:15px;color:var(--ink);margin-top:12px;font-weight:500}
+.pt-review-q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.pt-correct-mark{color:var(--green);font-size:13px;margin-top:6px}
+.pt-wrong-mark{color:var(--red);font-size:13px;margin-top:6px}
+.pt-correct-ans{color:var(--muted);font-size:12px;margin-top:3px}
+.pt-submit-area{padding:4px 0 32px;display:flex;flex-direction:column;gap:10px}
+.pt-blank-num{font-size:12px;color:var(--cyan);font-weight:600;margin-right:2px}
+.pt-blank{color:var(--muted);letter-spacing:2px}
+.pt-inline-inp{display:inline-block;width:90px;padding:1px 6px;border:none;border-bottom:2px solid var(--cyan);background:transparent;color:var(--ink);font-size:15px;outline:none;font-family:inherit;vertical-align:middle;text-align:center}
+.pt-inline-inp:focus{background:rgba(6,182,212,.08)}
+.pt-cloze-grid{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.pt-cloze-item{display:flex;align-items:flex-start;gap:12px}
+.pt-cloze-num{font-size:13px;font-weight:600;color:var(--cyan);min-width:28px;padding-top:8px}
+.pt-reading-passage{max-height:280px;overflow-y:auto;margin-bottom:20px}
+.pt-options-bank{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px}
+.pt-bank-item{font-size:13px;color:var(--ink);line-height:1.5;padding:3px 0}
+.pt-bank-letter{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1px solid var(--border);text-align:center;line-height:20px;font-size:11px;font-weight:600;color:var(--cyan);margin-right:6px;flex-shrink:0}
+.pt-gap-num{display:inline-block;font-size:12px;font-weight:600;color:var(--cyan);margin-right:2px}
+.pt-gap-sel{display:inline-block;padding:2px 6px;background:var(--surface2);border:1px solid var(--cyan);border-radius:var(--rs);color:var(--ink);font-size:13px;font-family:inherit;cursor:pointer;vertical-align:middle}
+.pt-gap-sel:focus{outline:none;border-color:var(--cyan)}
+.pt-task-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;font-size:13px;line-height:1.7;color:var(--ink);margin-bottom:10px}
+.pt-task-box p{margin-bottom:8px}.pt-task-box p:last-child{margin-bottom:0}
+.pt-checklist{font-size:12px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:var(--rs);border-left:2px solid var(--cyan)}
+.pt-checklist strong{color:var(--ink);display:block;margin-bottom:4px}
+.pt-checklist ul{padding-left:16px}.pt-checklist li{margin-bottom:2px}
+.pt-student-ans{background:var(--surface2);border-radius:var(--rs);padding:8px 12px;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── TOP BAR ── -->
+  <header class="topbar">
+    <div class="brand"><span>✦</span> Homework</div>
+    <span class="student-name-tag" id="top-name"></span>
+  </header>
+
+  <!-- ── CONTENT ── -->
+  <div class="container">
+
+    <!-- Loading screen -->
+    <div class="screen active" id="s-loading">
+      <div class="loading-spin"><div class="spinner"></div> Loading…</div>
+    </div>
+
+    <!-- Error screen -->
+    <div class="screen" id="s-error">
+      <div class="center-msg">
+        <div class="big">🔗</div>
+        <div id="error-msg">Invalid or missing link.</div>
+      </div>
+    </div>
+
+    <!-- Assignment list screen -->
+    <div class="screen" id="s-list">
+      <div class="list-header">
+        <div class="list-title" id="list-title">Your Homework</div>
+        <div class="list-sub" id="list-sub"></div>
+      </div>
+      <div id="assignments-list"></div>
+    </div>
+
+    <!-- Progress test screen -->
+    <div class="screen" id="s-progress">
+      <div class="pt-hero">
+        <div class="pt-hero-badge">End-of-course progress test</div>
+        <div class="pt-hero-title">Aida's Final Review</div>
+        <div class="pt-hero-sub">Vocabulary · Grammar · Writing · Speaking</div>
+      </div>
+      <div class="pt-progress-bar"><div class="pt-progress-fill" id="pt-prog" style="width:0%"></div></div>
+      <div id="pt-body"></div>
+    </div>
+
+    <!-- Assignment taking screen -->
+    <div class="screen" id="s-take">
+      <div class="taking-hd">
+        <button class="back-btn" onclick="backToList()" title="Back">←</button>
+        <div>
+          <div class="taking-title" id="take-title"></div>
+          <div class="taking-due" id="take-due"></div>
+        </div>
+      </div>
+      <div id="take-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURATION — paste your Supabase values here
+// ═══════════════════════════════════════════════
+const SUPABASE_URL  = 'https://qqqjiwrfudcvsjcxeavd.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWppd3JmdWRjdnNqY3hlYXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTgxMDAsImV4cCI6MjA5MDg5NDEwMH0.hvUN1MAP32eF-4sbjpQXRFWRyf3prsDjDGu_vzwvpyo';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let student    = null;   // current student record
+let myAsgns    = [];     // assigned assignments with submission info
+let openAsgn   = null;   // assignment being taken
+let openItems  = [];     // questions for open assignment
+let openSub    = null;   // existing submission if any
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmt(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return `Due ${day}.${m}.${y}`;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  showScreen('s-error');
+}
+
+// ═══════════════════════════════════════════════
+//  INIT — read token from URL, boot the app
+// ═══════════════════════════════════════════════
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('t');
+
+  // Progress test mode — no login needed
+  if (params.get('test') === 'progress') {
+    document.getElementById('top-name').textContent = 'Aida';
+    initProgressTest();
+    return;
+  }
+
+  if (!token) {
+    showError('No homework link found. Ask your teacher for your private link.');
+    return;
+  }
+
+  try {
+    // Look up student by token
+    const { data, error } = await sb.from('students')
+      .select('*').eq('token', token).single();
+    if (error || !data) {
+      showError('This link is invalid or has expired. Ask your teacher for a new link.');
+      return;
+    }
+    student = data;
+    document.getElementById('top-name').textContent = student.name;
+    document.getElementById('list-title').textContent = `${student.name}'s Homework`;
+
+    await loadAssignments();
+  } catch (e) {
+    showError(`Something went wrong: ${e.message}`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  ASSIGNMENT LIST
+// ═══════════════════════════════════════════════
+async function loadAssignments() {
+  try {
+    // Get all assignments assigned to this student
+    const { data: sa, error: e1 } = await sb.from('student_assignments')
+      .select('assignment_id, assignments(*)')
+      .eq('student_id', student.id);
+    if (e1) throw e1;
+
+    // Get submissions by this student
+    const { data: subs, error: e2 } = await sb.from('submissions')
+      .select('*').eq('student_id', student.id);
+    if (e2) throw e2;
+
+    const subMap = {};
+    (subs || []).forEach(s => { subMap[s.assignment_id] = s; });
+
+    // Build merged list, sort by due_date ascending
+    myAsgns = (sa || [])
+      .map(row => ({ ...row.assignments, submission: subMap[row.assignment_id] || null }))
+      .sort((a, b) => {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return a.due_date.localeCompare(b.due_date);
+      });
+
+    renderList();
+    showScreen('s-list');
+  } catch (e) {
+    showError(`Could not load assignments: ${e.message}`);
+  }
+}
+
+function renderList() {
+  const el = document.getElementById('assignments-list');
+  const sub = document.getElementById('list-sub');
+
+  const total   = myAsgns.length;
+  const done    = myAsgns.filter(a => a.submission).length;
+  sub.textContent = total
+    ? `${done} of ${total} completed`
+    : 'No assignments yet — check back later.';
+
+  if (!total) { el.innerHTML = ''; return; }
+
+  el.innerHTML = myAsgns.map(a => {
+    const s = a.submission;
+    let badgeHtml = '', clickable = true;
+
+    if (!s) {
+      badgeHtml = '<span class="badge badge-new">New</span>';
+    } else if (s.status === 'graded') {
+      badgeHtml = `<span class="badge badge-graded">Graded</span>
+                   <span class="badge badge-score" style="margin-left:5px">${s.score}/${s.max_score}</span>`;
+    } else {
+      badgeHtml = '<span class="badge badge-submitted">Submitted</span>';
+      clickable = false; // submitted but not graded — show result on click still
+    }
+
+    return `
+      <div class="asgn-card ${s ? 'done' : ''}" onclick="openAssignment('${a.id}')">
+        <div class="asgn-info">
+          <div class="asgn-title">${esc(a.title)}</div>
+          ${a.due_date ? `<div class="asgn-due">${fmt(a.due_date)}</div>` : ''}
+          ${a.description ? `<div class="asgn-due" style="margin-top:2px">${esc(a.description)}</div>` : ''}
+        </div>
+        <div class="asgn-status">${badgeHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  OPEN & TAKE ASSIGNMENT
+// ═══════════════════════════════════════════════
+async function openAssignment(id) {
+  openAsgn = myAsgns.find(a => a.id === id);
+  if (!openAsgn) return;
+
+  showScreen('s-loading');
+
+  try {
+    // Load questions
+    const { data: items, error: e1 } = await sb.from('items')
+      .select('*').eq('assignment_id', id).order('order_index');
+    if (e1) throw e1;
+    openItems = items || [];
+
+    // Get submission if exists
+    openSub = openAsgn.submission || null;
+
+    // Render
+    document.getElementById('take-title').textContent = openAsgn.title;
+    document.getElementById('take-due').textContent   = openAsgn.due_date ? fmt(openAsgn.due_date) : '';
+
+    if (openSub) {
+      renderResult();
+    } else {
+      renderTaking();
+    }
+    showScreen('s-take');
+  } catch (e) {
+    showError(`Could not load assignment: ${e.message}`);
+  }
+}
+
+function backToList() {
+  openAsgn  = null;
+  openItems = [];
+  openSub   = null;
+  showScreen('s-list');
+  loadAssignments(); // refresh statuses
+}
+
+// ── RENDER QUESTIONS FORM ──────────────────────
+function renderTaking() {
+  const el = document.getElementById('take-body');
+
+  if (!openItems.length) {
+    el.innerHTML = '<div style="color:var(--muted);padding:20px 0">No questions in this assignment yet.</div>';
+    return;
+  }
+
+  const questions = openItems.map((item, i) => questionHtml(item, i)).join('');
+
+  el.innerHTML = `
+    ${questions}
+    <div class="submit-area">
+      <button class="btn pri full" id="submit-btn" onclick="submitAssignment()">Submit Assignment</button>
+    </div>`;
+}
+
+function questionHtml(item, i) {
+  let body = '';
+
+  if (item.type === 'multiple_choice') {
+    const opts = (item.options || []).filter(o => o && o.toString().trim());
+    body = `
+      <div class="mc-options">
+        ${opts.map((opt, j) => `
+          <label class="mc-opt" id="opt-${item.id}-${j}" onclick="selectMC('${item.id}',${j})">
+            <input type="radio" name="mc-${item.id}" value="${j}" style="pointer-events:none"/>
+            <span class="mc-opt-label">${esc(opt)}</span>
+          </label>`).join('')}
+      </div>`;
+
+  } else if (item.type === 'fill_blank') {
+    // Replace ___ with an inline input
+    const parts = item.question.split('___');
+    let sentence = '';
+    parts.forEach((part, j) => {
+      sentence += esc(part);
+      if (j < parts.length - 1) {
+        sentence += `<input type="text" class="fill-inp" id="fill-${item.id}"
+          placeholder="…" autocomplete="off" autocorrect="off" spellcheck="false"/>`;
+      }
+    });
+    body = `<div class="fill-sentence">${sentence}</div>`;
+
+  } else {
+    // Short answer
+    body = `<textarea id="sa-${item.id}" placeholder="Write your answer here…"></textarea>`;
+  }
+
+  // For fill_blank, question text is already in the sentence; for others show separately
+  const showQText = item.type !== 'fill_blank';
+
+  return `
+    <div class="question-block">
+      <div class="q-num">Question ${i + 1} of ${openItems.length}</div>
+      ${showQText ? `<div class="q-text">${esc(item.question)}</div>` : ''}
+      ${body}
+    </div>`;
+}
+
+function selectMC(itemId, optIdx) {
+  // Visual selection
+  document.querySelectorAll(`[id^="opt-${itemId}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`opt-${itemId}-${optIdx}`)?.classList.add('selected');
+  // Set radio
+  const radio = document.querySelector(`input[name="mc-${itemId}"][value="${optIdx}"]`);
+  if (radio) radio.checked = true;
+}
+
+// ── COLLECT ANSWERS ────────────────────────────
+function collectAnswers() {
+  const answers = {};
+  let missing = false;
+
+  openItems.forEach(item => {
+    if (item.type === 'multiple_choice') {
+      const radio = document.querySelector(`input[name="mc-${item.id}"]:checked`);
+      if (radio) {
+        answers[item.id] = radio.value; // index as string
+      } else {
+        answers[item.id] = '';
+        missing = true;
+      }
+    } else if (item.type === 'fill_blank') {
+      answers[item.id] = document.getElementById(`fill-${item.id}`)?.value.trim() || '';
+      if (!answers[item.id]) missing = true;
+    } else {
+      answers[item.id] = document.getElementById(`sa-${item.id}`)?.value.trim() || '';
+      // short answer blank is allowed
+    }
+  });
+
+  return { answers, missing };
+}
+
+// ── AUTO-SCORE ────────────────────────────────
+function autoScore(answers) {
+  let score = 0, maxScore = 0;
+  openItems.forEach(item => {
+    if (item.type === 'short_answer') { maxScore++; return; } // counted but not auto-scored
+    maxScore++;
+    const given   = String(answers[item.id] || '').trim().toLowerCase();
+    const correct = String(item.correct_answer || '').trim().toLowerCase();
+    if (given === correct) score++;
+  });
+  return { score, maxScore };
+}
+
+// ── SUBMIT ────────────────────────────────────
+async function submitAssignment() {
+  const { answers, missing } = collectAnswers();
+  const mcOrFill = openItems.filter(i => i.type !== 'short_answer');
+
+  if (missing && mcOrFill.length > 0) {
+    const proceed = confirm('You have unanswered questions. Submit anyway?');
+    if (!proceed) return;
+  }
+
+  const { score, maxScore } = autoScore(answers);
+  const btn = document.getElementById('submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+  try {
+    const { data, error } = await sb.from('submissions').insert({
+      student_id:    student.id,
+      assignment_id: openAsgn.id,
+      answers,
+      score,
+      max_score: maxScore,
+      status: 'submitted',
+    }).select().single();
+    if (error) throw error;
+
+    openSub = data;
+    renderResult();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Assignment'; }
+    alert(`Could not submit: ${e.message}`);
+  }
+}
+
+// ── RENDER RESULT (submitted or graded) ──────
+function renderResult() {
+  const el  = document.getElementById('take-body');
+  const sub = openSub;
+
+  if (sub.status === 'graded') {
+    // Show full result with score and feedback
+    let html = `
+      <div class="result-box">
+        <div class="result-label">Your Score</div>
+        <div class="result-score">${sub.score} / ${sub.max_score}</div>
+        ${sub.feedback ? `
+          <div class="result-feedback">
+            <div class="result-feedback-label">Teacher's feedback</div>
+            ${esc(sub.feedback)}
+          </div>` : ''}
+      </div>`;
+
+    // Show answers with correct/wrong indicators
+    if (openItems.length) {
+      html += '<div style="margin-top:4px">';
+      const answers = sub.answers || {};
+
+      openItems.forEach((item, i) => {
+        let reviewHtml = '';
+        const studentAns = answers[item.id] || '';
+
+        if (item.type === 'multiple_choice') {
+          const opts      = item.options || [];
+          const givenIdx  = parseInt(studentAns);
+          const corrIdx   = parseInt(item.correct_answer);
+          const isCorrect = givenIdx === corrIdx;
+          const givenTxt  = opts[givenIdx] ?? '—';
+          const corrTxt   = opts[corrIdx]  ?? '—';
+
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isCorrect ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isCorrect ? '✓' : '✗'} Your answer: ${esc(givenTxt)}
+              </div>
+              ${!isCorrect ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(corrTxt)}</div>` : ''}
+            </div>`;
+
+        } else if (item.type === 'fill_blank') {
+          const given   = String(studentAns).trim().toLowerCase();
+          const correct = String(item.correct_answer || '').trim().toLowerCase();
+          const isOk    = given === correct;
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px">
+              <div style="color:${isOk ? 'var(--green)' : 'var(--red)'};margin-bottom:3px">
+                ${isOk ? '✓' : '✗'} Your answer: ${esc(studentAns) || '(blank)'}
+              </div>
+              ${!isOk ? `<div style="color:var(--muted);font-size:12px">Correct: ${esc(item.correct_answer)}</div>` : ''}
+            </div>`;
+        } else {
+          reviewHtml = `
+            <div style="font-size:13px;margin-top:8px;color:var(--muted)">
+              Your answer: ${esc(studentAns) || '(no answer)'}
+            </div>`;
+        }
+
+        html += `
+          <div class="question-block" style="cursor:default">
+            <div class="q-num">Question ${i+1}</div>
+            <div class="q-text">${esc(item.type === 'fill_blank' ? item.question.replace('___','____') : item.question)}</div>
+            ${reviewHtml}
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+
+  } else {
+    // Submitted but not graded yet
+    el.innerHTML = `
+      <div class="success-banner">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Submitted!</div>
+        <div class="success-sub">Your teacher will grade this soon. Check back later.</div>
+      </div>
+      <div style="text-align:center">
+        <button class="btn" onclick="backToList()">← Back to Assignments</button>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PROGRESS TEST — Aida's end-of-course test
+//  Activate by adding ?test=progress to any link
+// ═══════════════════════════════════════════════
+
+const PT_SECTIONS = [
+
+// ─────────────────────────────────────────────────────────────
+// PART 1 — VOCABULARY IN USE
+// Cambridge B1 style: multiple-choice cloze (Part 5 format)
+// Choose the correct word to complete each gap.
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'vocab',
+  label: 'Part 1 — Vocabulary',
+  type: 'cloze_mc',
+  instructions: 'Choose the correct word (A, B, C or D) to complete each gap.',
+  passage: `My sister Maya is one of the most (1)___ people I know. She is always happy to listen to other people's ideas and never judges anyone. She is really (2)___ about photography — she goes out with her camera every weekend and takes pictures of the sea shore near our house. She says the light is most beautiful just after sunrise, when the water begins to (3)___ and the birds start flying overhead. Their (4)___ catch the light in a way that looks almost magical.\n\nMaya doesn't just (5)___ her photographs at home. Last year she entered a local (6)___, and one of her pictures won first prize. She was so surprised she almost (7)___ over when they announced her name! Afterwards, I asked her to (8)___ me some money so I could buy a camera of my own — I wanted to (9)___ in touch with what she loves. She agreed straightaway. That's just the (10)___ of person she is — kind, generous, and passionate about everything she does.`,
+  questions: [
+    { id:'v1', gap:1, opts:['A. open-minded','B. interested','C. tiny','D. polluted'], ans:'A' },
+    { id:'v2', gap:2, opts:['A. dependent','B. crazy','C. pleased','D. reunited'], ans:'B' },
+    { id:'v3', gap:3, opts:['A. creep','B. rescue','C. shine','D. return'], ans:'C' },
+    { id:'v4', gap:4, opts:['A. surveys','B. advertisements','C. feathers','D. relatives'], ans:'C' },
+    { id:'v5', gap:5, opts:['A. keep','B. lend','C. look','D. depend'], ans:'A' },
+    { id:'v6', gap:6, opts:['A. survey','B. advertisement','C. newsagent\'s','D. countryside'], ans:'A' },
+    { id:'v7', gap:7, opts:['A. rescued','B. fell','C. laughed','D. crept'], ans:'B' },
+    { id:'v8', gap:8, opts:['A. borrow','B. rescue','C. lend','D. keep'], ans:'C' },
+    { id:'v9', gap:9, opts:['A. come','B. keep','C. fall','D. turn'], ans:'B' },
+    { id:'v10', gap:10, opts:['A. own','B. sort','C. apart','D. tiny'], ans:'B' },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 2 — GRAMMAR: OPEN CLOZE
+// Cambridge B1 style: Part 6 format — no options given.
+// Write ONE word to complete each gap.
+// Tests: articles, quantifiers, verb+prep, some/any/no,
+//        although/however/so, -ing/-ed, state verbs, time preps
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'grammar',
+  label: 'Part 2 — Grammar',
+  type: 'open_cloze',
+  instructions: 'Write ONE word to fill each gap. There is only one correct answer for each gap.',
+  passage: `My neighbour Carlos lives on (1)___ first floor of our building. He is (2)___ interesting person — he knows a lot about almost every subject. He has been (3)___ in languages since he was a child. Although he is very busy, he (4)___ a little time every day to read. He (5)___ believe in wasting a single minute — that is just how he thinks.\n\nLast Saturday I saw him in the delicatessen buying (6)___ loaf of bread and a packet of coffee. He looked (7)___ in a hurry, so I didn't stop him for long. He told me he was going (8)___ a walk along the sea shore and would come back by lunchtime. The weather was a (9)___ cold, but (10)___ that, it was a perfect morning for a walk. He waved goodbye and walked away (11)___. I watched him until he turned the corner. I (12)___ always liked people who are passionate about the simple things in life — it is something I find very beautiful.`,
+  questions: [
+    { id:'g1',  gap:1,  ans:'the',      hint:'definite article' },
+    { id:'g2',  gap:2,  ans:'an',       hint:'indefinite article' },
+    { id:'g3',  gap:3,  ans:'interested', hint:'adjective + in' },
+    { id:'g4',  gap:4,  ans:'finds',    hint:'present simple, state verb' },
+    { id:'g5',  gap:5,  ans:'does',     hint:'auxiliary for emphasis' },
+    { id:'g6',  gap:6,  ans:'a',        hint:'container expression: a ___ of' },
+    { id:'g7',  gap:7,  ans:'as',       hint:'as if / as though OR: looked as if' },
+    { id:'g8',  gap:8,  ans:'for',      hint:'go for a walk' },
+    { id:'g9',  gap:9,  ans:'bit',      hint:'a bit + adjective' },
+    { id:'g10', gap:10, ans:'apart',    hint:'apart from that' },
+    { id:'g11', gap:11, ans:'urgently', hint:'adverb from urgent' },
+    { id:'g12', gap:12, ans:'have',     hint:'present perfect: I have always liked' },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 3 — READING COMPREHENSION
+// Cambridge B1 style: Part 3 (long text + MC) + Part 4 (gapped text)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'reading',
+  label: 'Part 3 — Reading',
+  type: 'reading',
+  instructions: 'Read the article below and answer the questions.',
+  passage: `THE COUNTRYSIDE SHOP THAT BECAME A COMMUNITY\n\nWhen the last newsagent\'s in the village of Ashdale closed its doors three years ago, many residents thought that was the end. For years the little shop on the high street had been more than just a place to buy a newspaper or a loaf of bread. It was somewhere people came to talk, to share news, and simply to feel less alone in a small, polluted corner of a busy world.\n\nThen Sara Whitfield moved back to the village after living abroad. Sara, who is open-minded and passionate about community life, had an idea. She asked residents whether they would be interested in running the shop together as a community business. The response was immediate. "I was nearly knocked over by how quickly people agreed," she said, laughing. "I thought there would be a long survey, lots of discussions — but within a week, over sixty people had signed up."\n\nThe shop — now called The Corner — opened six months later. It sells everything from a bunch of fresh flowers to a box of local cheese. There is a small delicatessen section where visitors can buy unusual foods, as well as a chemist\'s counter for everyday medicines. On Friday evenings it becomes a meeting place where relatives who live far apart come to catch up over coffee.\n\nNot everything has been easy. Sara admits that although the idea was simple, the reality was sometimes stressful. "There were moments when I felt like giving up," she says. "However, every time that happened, someone would come in and say how much the shop had changed their life — and that feeling was worth more than anything." The shop now employs twelve local people and has won a national award for its work in the community.\n\nSara\'s advice to anyone thinking of a similar project is straightforward: depend on your neighbours, keep in touch with what matters to people, and never underestimate how much a tiny shop can do for a community.`,
+  questions: [
+    { id:'r1', type:'mc4',
+      q:'What is the main purpose of this article?',
+      opts:['A. To advertise a new type of shop','B. To describe how a community saved its local shop','C. To explain why village shops are closing','D. To give advice about running a business'],
+      ans:'B' },
+    { id:'r2', type:'mc4',
+      q:'How did people in Ashdale react to Sara\'s idea?',
+      opts:['A. They wanted more time to think about it','B. They organised a long survey first','C. They agreed very quickly','D. Only a few people were interested'],
+      ans:'C' },
+    { id:'r3', type:'mc4',
+      q:'What does Sara mean when she says she was "nearly knocked over"?',
+      opts:['A. She fell over in the shop','B. She was extremely surprised by people\'s enthusiasm','C. There were too many people in the room','D. She was disappointed by the reaction'],
+      ans:'B' },
+    { id:'r4', type:'mc4',
+      q:'Which of the following does The Corner NOT sell, according to the article?',
+      opts:['A. Fresh flowers','B. Local cheese','C. Second-hand books','D. Everyday medicines'],
+      ans:'C' },
+    { id:'r5', type:'mc4',
+      q:'What kept Sara going when things were difficult?',
+      opts:['A. Winning a national award','B. Hearing how the shop had changed people\'s lives','C. The money the shop was making','D. Support from the local government'],
+      ans:'B' },
+    // Gapped text — Cambridge Part 4 style
+    { id:'r6', type:'gapped_sentences',
+      instructions:'Five sentences have been removed from the article below. Choose from sentences A–G the one which fits each gap. There are TWO extra sentences you do not need to use.',
+      passage:`Every Saturday morning, twelve-year-old Mia gets up early — even if it means giving up her usual lie-in. (1)___. Her grandmother lives on the first floor of a block near the sea shore, just a fifteen-minute walk away.\n\nMia loves these visits. (2)___. Her grandmother always has a story to tell — about relatives who moved away, about the countryside she grew up in, or about the tiny flat she used to own in the city.\n\nOne Saturday, her grandmother seemed unusually quiet. (3)___. Mia asked what was wrong. After a moment, her grandmother smiled and said she had just been thinking about the past.\n\n(4)___. Mia put her arm around her and they sat together looking out of the window at the sea. Later, Mia helped make lunch — a fresh loaf from the delicatessen on the corner, a bowl of soup, and a slice of lemon cake.\n\nAs she walked home that afternoon, Mia felt something she couldn\'t quite name. (5)___. She decided to come back the following Saturday — and the one after that.`,
+      options: {
+        'A': 'It wasn\'t sadness exactly — more like a warm, serious feeling.',
+        'B': 'She creeps out of bed, gets dressed quickly, and goes to visit her grandmother.',
+        'C': 'She was embarrassed by how little she had visited recently.',
+        'D': 'Apart from the conversation, she also liked the journey itself.',
+        'E': 'She was sitting by the window and didn\'t say anything when Mia arrived.',
+        'F': 'Mia didn\'t say anything either.',
+        'G': 'They reunited after several months apart.'
+      },
+      answers: { 1:'B', 2:'D', 3:'E', 4:'F', 5:'A' }
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 4 — WRITING
+// Cambridge B1 style: Part 1 (email/message) + Part 2 (article/story)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'writing',
+  label: 'Part 4 — Writing',
+  type: 'writing',
+  instructions: 'Complete both writing tasks. Write in full sentences.',
+  questions: [
+    {
+      id: 'w1',
+      type: 'email',
+      label: 'Task 1 — Email (around 100 words)',
+      prompt: `You have received this email from your English friend, Sam:\n\n"Hi! I'm writing an article about how young people spend their weekends. Can you help me? I'd love to know: Do you have a lie in, or do you get up early? What do you usually do — go for a walk, meet friends, stay at home? Is there anything you are really crazy about that you do every weekend? Thanks!"\n\nWrite an email to Sam answering all his questions. Write around 100 words.`,
+      minWords: 80,
+      checklist: ['do/don\'t have a lie in','what you do on weekends','something you are crazy about']
+    },
+    {
+      id: 'w2',
+      type: 'article',
+      label: 'Task 2 — Article (around 100 words)',
+      prompt: `You have seen this notice on an English-language website:\n\n"Articles wanted: MY NEIGHBOURHOOD\nTell us about where you live! What shops are nearby? What do you like about it? What would you change? The best articles will be published on our website."\n\nWrite your article. Include: what shops or places are near your home, what you like about your neighbourhood (use although or however), and one thing you would change. Write around 100 words.`,
+      minWords: 80,
+      checklist: ['mention at least one specific shop','use although OR however','say what you would change']
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// PART 5 — SPEAKING
+// Cambridge B1 style: Part 1 (personal questions) + Part 2 (photo
+// description) + Part 3 (collaborative task) + Part 4 (discussion)
+// ─────────────────────────────────────────────────────────────
+{
+  id: 'speaking',
+  label: 'Part 5 — Speaking',
+  type: 'speaking',
+  instructions: 'Record your answer for each task. Listen to the instructions before you start.',
+  questions: [
+    {
+      id: 's1',
+      label: 'Part A — Personal questions (1–2 minutes)',
+      q: 'Answer these questions as if you are talking to an examiner. Speak naturally — don\'t read from notes.\n\n1. Where do you live, and what is your neighbourhood like?\n2. What do you usually do at weekends? Do you prefer going out or staying at home?\n3. Is there something you are really crazy about — a hobby or interest you do every week?\n4. Tell me about someone in your family. What are they like?',
+      tip: 'Aim for full sentences. Use words like: "I usually…", "Actually…", "Apart from that…", "I\'m really into…", "It depends on…"',
+      duration: '90 seconds'
+    },
+    {
+      id: 's2',
+      label: 'Part B — Describe a photo (1 minute)',
+      q: 'Imagine you can see a photo of a busy street with different shops — a chemist\'s, a newsagent\'s and a small delicatessen. Some people are walking past. An older woman is carrying a loaf of bread. A child is looking in the window of the clothes shop.\n\nDescribe this photo in as much detail as you can. Say what you can see, where things are, and what you think is happening.',
+      tip: 'Useful phrases: "In the foreground…", "On the left / right…", "I can see…", "It looks as if…", "The woman seems to be…", "There are a few people…", "In the background…"',
+      duration: '60 seconds'
+    },
+    {
+      id: 's3',
+      label: 'Part C — Discussion task (90 seconds)',
+      q: 'Imagine you and a friend are planning a weekend trip to the countryside. You need to decide:\n\n• Whether to go for a long walk or visit the local village shops\n• Whether to bring a packed lunch (a loaf of bread, a bunch of grapes, a packet of biscuits) or eat at a café\n• What to do if the weather is a bit cold and polluted-feeling\n\nTalk through your ideas. Make a decision and give your reasons.',
+      tip: 'Useful phrases: "I think we should…", "It depends on…", "Although it\'s cold, we could…", "However, if it rains…", "What about…?", "I\'d rather… because…"',
+      duration: '90 seconds'
+    }
+  ]
+}
+
+];
+
+
+
+// State
+let ptAnswers   = {};    // id → value
+let ptRecorders = {};    // id → { blob, url }
+let ptSubmitted = false;
+let ptTotalAuto = 0;
+let ptTotalQ    = 0;
+
+function initProgressTest() {
+  // Count total scoreable items across all section types
+  PT_SECTIONS.forEach(sec => {
+    if (sec.type === 'cloze_mc') {
+      ptTotalQ += sec.questions.length;
+      ptTotalAuto += sec.questions.length;
+    } else if (sec.type === 'open_cloze') {
+      ptTotalQ += sec.questions.length;
+      ptTotalAuto += sec.questions.length;
+    } else if (sec.type === 'reading') {
+      sec.questions.forEach(q => {
+        ptTotalQ++;
+        if (q.type === 'mc4') ptTotalAuto++;
+        if (q.type === 'gapped_sentences') {
+          const n = Object.keys(q.answers).length;
+          ptTotalQ += n - 1; // already counted one above
+          ptTotalAuto += n;
+        }
+      });
+    } else if (sec.type === 'writing' || sec.type === 'speaking') {
+      ptTotalQ += sec.questions.length;
+    }
+  });
+  renderProgressTest();
+  showScreen('s-progress');
+}
+
+function renderProgressTest() {
+  const body = document.getElementById('pt-body');
+  let html = '';
+
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section">
+      <div class="pt-section-label">${esc(sec.label)}</div>
+      <div class="pt-instr">${esc(sec.instructions)}</div>`;
+
+    // ── Part 1: Multiple-choice cloze ──────────────────────
+    if (sec.type === 'cloze_mc') {
+      // Render passage with numbered blanks, then options below
+      let passageHtml = esc(sec.passage).replace(/\n/g, '<br>');
+      sec.questions.forEach(q => {
+        passageHtml = passageHtml.replace(
+          `(${q.gap})___`,
+          `<span class="pt-blank-num">(${q.gap})</span><span class="pt-blank">_______</span>`
+        );
+      });
+      html += `<div class="pt-passage">${passageHtml}</div>`;
+      html += `<div class="pt-cloze-grid">`;
+      sec.questions.forEach(q => {
+        html += `<div class="pt-cloze-item">
+          <div class="pt-cloze-num">(${q.gap})</div>
+          <div class="pt-opts">`;
+        q.opts.forEach(opt => {
+          const letter = opt[0]; // 'A', 'B', 'C', 'D'
+          html += `<div class="pt-opt" id="ptopt-${q.id}-${letter}" onclick="ptSelectLetter('${q.id}','${letter}')">${esc(opt)}</div>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+
+    // ── Part 2: Open cloze ─────────────────────────────────
+    } else if (sec.type === 'open_cloze') {
+      let passageHtml = esc(sec.passage).replace(/\n/g, '<br>');
+      sec.questions.forEach(q => {
+        passageHtml = passageHtml.replace(
+          `(${q.gap})___`,
+          `<span class="pt-blank-num">(${q.gap})</span><input type="text" class="pt-inline-inp" id="ptfill-${q.id}" placeholder="   " oninput="ptSaveText('${q.id}',this.value)" autocorrect="off" autocapitalize="off" spellcheck="false"/>`
+        );
+      });
+      html += `<div class="pt-passage">${passageHtml}</div>`;
+
+    // ── Part 3: Reading ────────────────────────────────────
+    } else if (sec.type === 'reading') {
+      // Main passage first
+      if (sec.passage) {
+        html += `<div class="pt-passage pt-reading-passage">${esc(sec.passage).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</div>`;
+      }
+      sec.questions.forEach((q, qi) => {
+        if (q.type === 'mc4') {
+          html += `<div class="pt-q" id="ptq-${q.id}">
+            <div class="pt-q-num">Question ${qi + 1}</div>
+            <div class="pt-q-text">${esc(q.q)}</div>
+            <div class="pt-opts">`;
+          q.opts.forEach(opt => {
+            const letter = opt[0];
+            html += `<div class="pt-opt" id="ptopt-${q.id}-${letter}" onclick="ptSelectLetter('${q.id}','${letter}')">${esc(opt)}</div>`;
+          });
+          html += `</div></div>`;
+
+        } else if (q.type === 'gapped_sentences') {
+          html += `<div class="pt-q" id="ptq-${q.id}">
+            <div class="pt-q-num">Questions ${qi + 1}–${qi + Object.keys(q.answers).length}</div>
+            <div class="pt-instr" style="margin-bottom:12px">${esc(q.instructions)}</div>`;
+          // Options bank
+          html += `<div class="pt-options-bank">`;
+          Object.entries(q.options).forEach(([letter, text]) => {
+            html += `<div class="pt-bank-item"><span class="pt-bank-letter">${letter}</span> ${esc(text)}</div>`;
+          });
+          html += `</div>`;
+          // Passage with dropdowns
+          let gapPassage = esc(q.passage).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+          Object.keys(q.answers).forEach(num => {
+            gapPassage = gapPassage.replace(
+              `(${num})___`,
+              `<span class="pt-gap-num">${num}</span><select class="pt-gap-sel" id="ptgap-${q.id}-${num}" onchange="ptSaveGap('${q.id}','${num}',this.value)">
+                <option value="">—</option>
+                ${Object.keys(q.options).map(l => `<option value="${l}">${l}</option>`).join('')}
+              </select>`
+            );
+          });
+          html += `<div class="pt-passage" style="margin-top:14px">${gapPassage}</div>`;
+          html += `</div>`;
+        }
+      });
+
+    // ── Part 4: Writing ────────────────────────────────────
+    } else if (sec.type === 'writing') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q" id="ptq-${q.id}">
+          <div class="pt-q-num">${esc(q.label)}</div>
+          <div class="pt-task-box">${esc(q.prompt).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</div>`;
+        if (q.checklist) {
+          html += `<div class="pt-checklist"><strong>Make sure you:</strong><ul>`;
+          q.checklist.forEach(c => { html += `<li>${esc(c)}</li>`; });
+          html += `</ul></div>`;
+        }
+        html += `<div class="pt-wordcount" id="ptwc-${q.id}">0 words</div>
+          <textarea class="pt-textarea" id="ptwrite-${q.id}" placeholder="Write your answer here…" rows="8"
+            oninput="ptSaveText('${q.id}',this.value);ptWordCount('${q.id}')"></textarea>
+        </div>`;
+      });
+
+    // ── Part 5: Speaking ───────────────────────────────────
+    } else if (sec.type === 'speaking') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q" id="ptq-${q.id}">
+          <div class="pt-q-num">${esc(q.label)}</div>
+          <div class="pt-task-box">${esc(q.q).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</div>
+          <div class="pt-speaking-prompt">${esc(q.tip)}</div>
+          ${q.duration ? `<div class="pt-hint">Target: ${esc(q.duration)}</div>` : ''}
+          <button class="pt-voice-btn" id="ptvoice-${q.id}" onclick="ptToggleRecording('${q.id}')">
+            <span class="pt-dot" id="ptdot-${q.id}"></span>
+            <span id="ptvoicelbl-${q.id}">Start recording</span>
+          </button>
+          <div class="pt-audio-wrap" id="ptaudio-${q.id}"></div>
+          <p class="pt-speaking-note">Send your recording to your teacher via WhatsApp or Telegram after submitting.</p>
+        </div>`;
+      });
+    }
+
+    html += `</div>`; // close section
+  });
+
+  html += `<div class="pt-submit-area">
+    <button class="btn pri full" id="pt-submit-btn" onclick="ptSubmit()">Submit Test</button>
+  </div>`;
+
+  body.innerHTML = html;
+  ptUpdateProgress();
+}
+
+function ptSelectLetter(id, letter) {
+  if (ptSubmitted) return;
+  ptAnswers[id] = letter;
+  // Clear all options for this question, highlight selected
+  document.querySelectorAll(`[id^="ptopt-${id}-"]`).forEach(el => el.classList.remove('sel'));
+  document.getElementById(`ptopt-${id}-${letter}`)?.classList.add('sel');
+  ptUpdateProgress();
+}
+
+function ptSaveGap(qid, num, val) {
+  if (!ptAnswers[qid]) ptAnswers[qid] = {};
+  ptAnswers[qid][num] = val;
+  ptUpdateProgress();
+}
+
+function ptSaveText(id, val) {
+  ptAnswers[id] = val;
+  ptUpdateProgress();
+}
+
+function ptWordCount(id) {
+  const ta = document.getElementById(`ptwrite-${id}`);
+  const wc = document.getElementById(`ptwc-${id}`);
+  if (!ta || !wc) return;
+  const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+  wc.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+}
+
+function ptUpdateProgress() {
+  let answered = 0, total = 0;
+  PT_SECTIONS.forEach(sec => {
+    if (sec.type === 'cloze_mc' || sec.type === 'open_cloze') {
+      sec.questions.forEach(q => {
+        total++;
+        const v = ptAnswers[q.id];
+        if (v && v !== '') answered++;
+      });
+    } else if (sec.type === 'reading') {
+      sec.questions.forEach(q => {
+        if (q.type === 'mc4') {
+          total++;
+          if (ptAnswers[q.id]) answered++;
+        } else if (q.type === 'gapped_sentences') {
+          const gaps = Object.keys(q.answers);
+          gaps.forEach(num => {
+            total++;
+            if (ptAnswers[q.id]?.[num]) answered++;
+          });
+        }
+      });
+    } else if (sec.type === 'writing' || sec.type === 'speaking') {
+      sec.questions.forEach(q => {
+        total++;
+        const v = ptAnswers[q.id];
+        if (v && v !== '') answered++;
+      });
+    }
+  });
+  const pct = total > 0 ? Math.round(answered / total * 100) : 0;
+  const bar = document.getElementById('pt-prog');
+  if (bar) bar.style.width = pct + '%';
+}
+
+async function ptToggleRecording(id) {
+  const rec = ptRecorders[id];
+  if (rec && rec.active) { rec.mediaRecorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    ptRecorders[id] = { mediaRecorder: mr, active: true };
+    const btn = document.getElementById(`ptvoice-${id}`);
+    const dot = document.getElementById(`ptdot-${id}`);
+    const lbl = document.getElementById(`ptvoicelbl-${id}`);
+    btn.classList.add('recording'); dot.classList.add('rec');
+    lbl.textContent = 'Recording… tap to stop';
+    mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    mr.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      ptRecorders[id].active = false;
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url  = URL.createObjectURL(blob);
+      ptAnswers[id] = 'recorded';
+      ptRecorders[id].blob = blob; ptRecorders[id].url = url;
+      btn.classList.remove('recording'); dot.classList.remove('rec');
+      lbl.textContent = 'Re-record';
+      document.getElementById(`ptaudio-${id}`).innerHTML =
+        `<audio controls src="${url}" style="width:100%;margin-top:6px;height:36px"></audio>`;
+      ptUpdateProgress();
+    };
+    mr.start();
+  } catch (e) { alert('Microphone access denied. Please allow microphone access and try again.'); }
+}
+
+function ptSubmit() {
+  ptSubmitted = true;
+  document.getElementById('pt-submit-btn').disabled = true;
+  ptShowResults();
+}
+
+function ptShowResults() {
+  // Score Part 1 (cloze_mc) and Part 2 (open_cloze) and Part 3 MC
+  let score = 0, maxAuto = 0;
+  const results = {}; // id → { ok, given, correct }
+
+  PT_SECTIONS.forEach(sec => {
+    if (sec.type === 'cloze_mc') {
+      sec.questions.forEach(q => {
+        maxAuto++;
+        const ok = ptAnswers[q.id] === q.ans;
+        if (ok) score++;
+        results[q.id] = { ok, given: ptAnswers[q.id], correct: q.ans };
+      });
+    } else if (sec.type === 'open_cloze') {
+      sec.questions.forEach(q => {
+        maxAuto++;
+        const given = String(ptAnswers[q.id] || '').trim().toLowerCase();
+        const ok = given === q.ans.toLowerCase();
+        if (ok) score++;
+        results[q.id] = { ok, given: ptAnswers[q.id] || '', correct: q.ans };
+      });
+    } else if (sec.type === 'reading') {
+      sec.questions.forEach(q => {
+        if (q.type === 'mc4') {
+          maxAuto++;
+          const ok = ptAnswers[q.id] === q.ans;
+          if (ok) score++;
+          results[q.id] = { ok, given: ptAnswers[q.id], correct: q.ans };
+        } else if (q.type === 'gapped_sentences') {
+          Object.entries(q.answers).forEach(([num, correct]) => {
+            maxAuto++;
+            const given = ptAnswers[q.id]?.[num] || '';
+            const ok = given === correct;
+            if (ok) score++;
+            results[`${q.id}_${num}`] = { ok, given, correct };
+          });
+        }
+      });
+    }
+  });
+
+  const pct = maxAuto > 0 ? Math.round(score / maxAuto * 100) : 0;
+  const msg = pct >= 80 ? 'Excellent — very strong performance!' :
+              pct >= 60 ? 'Good work! Some areas to review.' : 'Keep practising — you can do it!';
+
+  const body = document.getElementById('pt-body');
+  let html = `
+    <div class="pt-score-box">
+      <div class="pt-score-num">${score}/${maxAuto}</div>
+      <div class="pt-score-label">Auto-scored (Parts 1, 2 and 3)</div>
+      <div class="pt-score-msg">${msg}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Parts 4 (Writing) and 5 (Speaking) will be graded by your teacher.</div>
+    </div>`;
+
+  PT_SECTIONS.forEach(sec => {
+    html += `<div class="pt-section"><div class="pt-section-label">${esc(sec.label)} — Review</div>`;
+
+    if (sec.type === 'cloze_mc') {
+      sec.questions.forEach(q => {
+        const r = results[q.id] || {};
+        const givenOpt = q.opts.find(o => o[0] === r.given) || '(not answered)';
+        html += `<div class="pt-review-q">
+          <div style="font-size:12px;color:var(--muted)">Gap (${q.gap})</div>
+          <div style="margin-top:4px"><span class="pt-auto-tag ${r.ok?'pt-auto-ok':'pt-auto-bad'}">${r.ok?'✓':'✗'}</span>
+          <span style="font-size:13px;margin-left:8px">${esc(givenOpt)}</span>
+          ${!r.ok ? `<div style="font-size:12px;color:var(--muted);margin-top:3px">Correct: ${esc(q.opts.find(o=>o[0]===q.ans)||q.ans)}</div>` : ''}
+          </div></div>`;
+      });
+
+    } else if (sec.type === 'open_cloze') {
+      sec.questions.forEach(q => {
+        const r = results[q.id] || {};
+        html += `<div class="pt-review-q">
+          <div style="font-size:12px;color:var(--muted)">Gap (${q.gap})</div>
+          <div style="margin-top:4px"><span class="pt-auto-tag ${r.ok?'pt-auto-ok':'pt-auto-bad'}">${r.ok?'✓':'✗'}</span>
+          <span style="font-size:13px;margin-left:8px">${esc(r.given||'(blank)')}</span>
+          ${!r.ok ? `<div style="font-size:12px;color:var(--muted);margin-top:3px">Correct: ${esc(q.ans)}${q.hint?` (${esc(q.hint)})`:''}` : ''}
+          </div></div>`;
+      });
+
+    } else if (sec.type === 'reading') {
+      sec.questions.forEach((q, qi) => {
+        if (q.type === 'mc4') {
+          const r = results[q.id] || {};
+          const givenOpt = q.opts.find(o => o[0] === r.given) || '(not answered)';
+          html += `<div class="pt-review-q">
+            <div style="font-size:12px;color:var(--muted)">Question ${qi+1}</div>
+            <div style="font-size:13px;font-weight:500;margin:4px 0">${esc(q.q)}</div>
+            <span class="pt-auto-tag ${r.ok?'pt-auto-ok':'pt-auto-bad'}">${r.ok?'✓':'✗'}</span>
+            <span style="font-size:13px;margin-left:8px">${esc(givenOpt)}</span>
+            ${!r.ok ? `<div style="font-size:12px;color:var(--muted);margin-top:3px">Correct: ${esc(q.opts.find(o=>o[0]===q.ans)||q.ans)}</div>` : ''}
+          </div>`;
+        } else if (q.type === 'gapped_sentences') {
+          html += `<div class="pt-review-q"><div style="font-size:12px;color:var(--muted)">Gapped text</div>`;
+          Object.entries(q.answers).forEach(([num, correct]) => {
+            const r = results[`${q.id}_${num}`] || {};
+            const givenText = r.given ? `${r.given}: ${esc(q.options[r.given]||'')}` : '(not answered)';
+            const corrText  = `${correct}: ${esc(q.options[correct]||'')}`;
+            html += `<div style="margin-top:6px;font-size:13px">Gap ${num}: <span class="pt-auto-tag ${r.ok?'pt-auto-ok':'pt-auto-bad'}">${r.ok?'✓':'✗'}</span> ${esc(givenText)}`;
+            if (!r.ok) html += `<div style="font-size:12px;color:var(--muted);margin-top:2px">Correct: ${esc(corrText)}</div>`;
+            html += `</div>`;
+          });
+          html += `</div>`;
+        }
+      });
+
+    } else if (sec.type === 'writing') {
+      sec.questions.forEach(q => {
+        const ans = ptAnswers[q.id] || '';
+        const wc  = ans.trim() ? ans.trim().split(/\s+/).length : 0;
+        html += `<div class="pt-review-q">
+          <div style="font-size:12px;color:var(--muted)">${esc(q.label)}</div>
+          <div class="pt-student-ans" style="margin-top:6px">${esc(ans)||'<em style="color:var(--muted)">No answer</em>'}</div>
+          ${wc ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${wc} words</div>` : ''}
+          <div style="font-size:12px;color:var(--cyan);margin-top:6px">Awaiting teacher feedback</div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'speaking') {
+      sec.questions.forEach(q => {
+        const rec = ptRecorders[q.id];
+        html += `<div class="pt-review-q">
+          <div style="font-size:12px;color:var(--muted)">${esc(q.label)}</div>`;
+        if (rec && rec.url) {
+          html += `<audio controls src="${rec.url}" style="width:100%;height:36px;margin-top:6px"></audio>
+            <div style="font-size:12px;color:var(--cyan);margin-top:6px">Send this recording to your teacher</div>`;
+        } else {
+          html += `<div style="font-size:13px;color:var(--muted);margin-top:4px">No recording made</div>`;
+        }
+        html += `</div>`;
+      });
+    }
+
+    html += `</div>`;
+  });
+
+  html += `<div style="text-align:center;padding:8px 0 32px">
+    <button class="btn" onclick="ptRestart()">← Retake test</button>
+  </div>`;
+  body.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function ptRestart() {
+  ptAnswers = {}; ptRecorders = {}; ptSubmitted = false;
+  ptTotalQ = 0; ptTotalAuto = 0;
+  initProgressTest();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
