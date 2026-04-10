@@ -1372,199 +1372,281 @@ async function syncFromWork() {
 //  PROGRESS TEST VIEW
 // ═══════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════════════
+// AIDA'S END-OF-COURSE PROGRESS TEST
+// Structured after Cambridge B1 Preliminary & B2 First (FCE) formats.
+// All vocabulary drawn directly from course content.
+// ══════════════════════════════════════════════════════════════════════
+
 const PT_SECTIONS = [
-  {
-    id:'vocab', label:'Section 1 — Vocabulary',
-    instructions:'Choose the correct word, match pairs, or fill in the missing word.',
-    questions:[
-      { id:'v1', type:'mc',
-        q:'What does "open-minded" mean?',
-        opts:['Willing to consider new ideas','Feeling embarrassed','Being in a hurry','Having a beard'], ans:0 },
-      { id:'v2', type:'mc',
-        q:'Choose the correct word: "Can you ___ me some money until Friday?" — I\'ll pay you back.',
-        opts:['borrow','lend','rescue','depend'], ans:1 },
-      { id:'v3', type:'fill',
-        q:'Complete the phrase: "She is ___ dancing — she practises five times a week." (crazy about / interested at)',
-        ans:'crazy about' },
-      { id:'v4', type:'mc',
-        q:'Which word means to move very quietly so no one hears you?',
-        opts:['shine','creep','rescue','rush'], ans:1 },
-      { id:'v5', type:'match',
-        q:'Match each word to its definition.',
-        pairs:[
-          ['tiny','very small'],
-          ['reunited','brought back together after time apart'],
-          ['polluted','made dirty or harmful by chemicals'],
-          ['passionate','having very strong feelings about something'],
-        ] },
-      { id:'v6', type:'fill',
-        q:'Fill in: "We should ___ in touch — let\'s message each other every week!" (keep / turn / come)',
-        ans:'keep' },
-      { id:'v7', type:'mc',
-        q:'"Apart from that, she is very kind." What does "apart from" mean here?',
-        opts:['because of','except for / besides','instead of','similar to'], ans:1 },
-      { id:'v8', type:'mc',
-        q:'Choose the correct shop for each item.\n"I need stamps and a newspaper."',
-        opts:["delicatessen","chemist's","newsagent's","off-licence"], ans:2 },
-      { id:'v9', type:'fill',
-        q:'Fill in: "She felt ___ when she fell over in front of everyone." (embarrassed / pleased / polluted)',
-        ans:'embarrassed' },
-      { id:'v10', type:'match',
-        q:'Match each shop to what you buy there.',
-        pairs:[
-          ["chemist's",'medicine and health products'],
-          ["newsagent's",'newspapers and magazines'],
-          ["delicatessen",'special or foreign foods'],
-          ["off-licence",'alcohol to take away'],
-        ] },
-      { id:'v11', type:'mc',
-        q:'"She ___ over and dropped everything." Which irregular past is correct?',
-        opts:['felt','fell','falled','fallen'], ans:1 },
-      { id:'v12', type:'fill',
-        q:'Fill in: "The swimmer was ___ from the rough sea by the lifeguard." (rescued / fell / crept)',
-        ans:'rescued' },
-      { id:'v13', type:'mc',
-        q:'Which sentence uses "lend" correctly?',
-        opts:['Can I lend your pen?','Can you lend me your pen?','I will lend a book from the library.','She lent money from the bank.'], ans:1 },
-      { id:'v14', type:'fill',
-        q:'Complete: "I often ___ for a run on Sunday mornings to clear my head." (go / come / turn)',
-        ans:'go' },
-      { id:'v15', type:'mc',
-        q:'"Feathers" cover the body of which animal?',
-        opts:['fish','birds','reptiles','insects'], ans:1 },
-    ]
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 1 — USE OF ENGLISH: Multiple-Choice Cloze  (FCE Part 1 / PET Part 5)
+// A text with 8 gaps. Each gap has 4 options (A, B, C, D).
+// Tests: collocations, fixed phrases, verb+preposition, vocabulary in use.
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p1',
+  label: 'Part 1 — Use of English: Multiple-Choice Cloze',
+  type: 'cloze_mc',
+  instructions: 'For questions 1–8, read the text below and decide which answer (A, B, C or D) best fits each gap.',
+  passage: `MY NEIGHBOUR SARA\n\nSara is one of the most (1)___ people I have ever met. She never judges anyone and is always happy to listen to new ideas. She is (2)___ passionate about photography that she goes out with her camera every single weekend, whatever the weather. What I admire most is that she never (3)___ on other people to motivate her — the drive comes entirely from within.\n\nLast month, Sara (4)___ over on the icy path outside our building and dropped her camera bag. I ran to help her, but she just laughed and said she was fine — though I could see she felt a little (5)___. I offered to (6)___ her some money so she could have the camera checked, but she refused. "I'll be all right," she said, smiling. "I just need to (7)___ in touch with what matters." That is exactly the (8)___ of person she is — generous, calm, and completely her own.`,
+  questions: [
+    { id:'p1q1', gap:1, opts:['A. open-minded','B. embarrassed','C. tiny','D. polluted'], ans:'A',
+      explain:'open-minded = willing to consider new ideas; fits "never judges anyone"' },
+    { id:'p1q2', gap:2, opts:['A. very','B. too','C. so','D. such'], ans:'C',
+      explain:'so … that = fixed structure showing result; "so passionate that she goes out"' },
+    { id:'p1q3', gap:3, opts:['A. depends','B. rescues','C. lends','D. returns'], ans:'A',
+      explain:'depend on = rely on someone/something; verb + preposition collocation' },
+    { id:'p1q4', gap:4, opts:['A. crept','B. fell','C. rescued','D. shone'], ans:'B',
+      explain:'fell over = lost balance and fell; irregular past of "fall"' },
+    { id:'p1q5', gap:5, opts:['A. pleased','B. reunited','C. embarrassed','D. passionate'], ans:'C',
+      explain:'embarrassed = feeling ashamed/awkward about something; -ed adjective describing how she felt' },
+    { id:'p1q6', gap:6, opts:['A. borrow','B. lend','C. keep','D. depend'], ans:'B',
+      explain:'lend = give temporarily; "lend someone money" (not borrow, which is to receive)' },
+    { id:'p1q7', gap:7, opts:['A. come','B. go','C. stay','D. keep'], ans:'D',
+      explain:'keep in touch = stay in contact; fixed phrase from the course' },
+    { id:'p1q8', gap:8, opts:['A. own','B. sort','C. kind','D. type'], ans:'D',
+      explain:'type of person = fixed expression; "that is exactly the type of person"' },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 2 — USE OF ENGLISH: Open Cloze  (FCE Part 2 / PET Part 6)
+// A text with 8 gaps. No options given — write ONE word per gap.
+// Tests: grammar words (articles, prepositions, quantifiers, pronouns,
+//        connectors, auxiliary verbs, -ing/-ed forms).
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p2',
+  label: 'Part 2 — Use of English: Open Cloze',
+  type: 'open_cloze',
+  instructions: 'For questions 9–16, read the text below and think of the word which best fits each gap. Use only ONE word in each gap.',
+  passage: `A WALK BY THE SEA\n\nEvery Sunday morning, I go (9)___ a walk along the sea shore near our house. I have been (10)___ this for nearly two years, and it never gets boring. (11)___ the path can be a bit muddy after rain, the view is always beautiful. There is usually (12)___ one or two other people around at that hour — most of the neighbours prefer (13)___ lie in.\n\nI always take a little food with me: a packet (14)___ biscuits, a bottle of water, and sometimes a bunch of grapes. I am not (15)___ much of a cook, so I keep things simple. By the time I come back, I feel completely refreshed — (16)___ though the walk only takes about forty minutes.`,
+  questions: [
+    { id:'p2q1', gap:9,  ans:'for',   explain:'go for a walk = fixed phrase; "for" is the correct preposition' },
+    { id:'p2q2', gap:10, ans:'doing', explain:'have been doing = present perfect continuous; activity ongoing for 2 years' },
+    { id:'p2q3', gap:11, ans:'Although', explain:'Although = connector of contrast; introduces a subordinate clause' },
+    { id:'p2q4', gap:12, ans:'only',  explain:'"only one or two" = limiting adverb; fits the context of few people' },
+    { id:'p2q5', gap:13, ans:'a',     explain:'prefer a lie in / prefer to have a lie in; "a" starts the noun phrase' },
+    { id:'p2q6', gap:14, ans:'of',    explain:'a packet of = container expression; preposition "of" links container + content' },
+    { id:'p2q7', gap:15, ans:'much',  explain:'not much of = fixed expression meaning "not really a …"' },
+    { id:'p2q8', gap:16, ans:'even',  explain:'even though = stronger contrast connector; fits the surprising result' },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 3 — USE OF ENGLISH: Word Formation  (FCE Part 3)
+// A text with 8 gaps. A root word is given in capitals.
+// Change it to fit the gap (add prefix/suffix, change form).
+// Tests: -ed/-ing adjectives, adverbs, nouns from verbs/adjectives.
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p3',
+  label: 'Part 3 — Use of English: Word Formation',
+  type: 'word_formation',
+  instructions: 'For questions 17–24, read the text below. Use the word given in capitals at the end of some of the lines to form a word that fits in the gap in the same line.',
+  passage: `THE PHOTOGRAPHY CLUB\n\nOur local photography club meets every Friday evening. The members are a very (17)___ group — some are beginners, others are (18)___ photographers who have been taking pictures for decades. What brings them together is their shared (19)___ for capturing light.\n\nLast week, one of the members gave a short talk about shooting at sunrise. She spoke quite (20)___ about composition and colour, but said the most important thing is patience. "I've had some (21)___ moments," she said, "when I've slipped on wet rocks or (22)___ dropped my equipment — but I've never regretted going out."\n\nAfterwards, there was a small (23)___ where everyone brought a dish to share. One member brought a large loaf of homemade bread and a (24)___ of fresh grapes. It was a very warm evening.`,
+  questions: [
+    { id:'p3q1', gap:17, root:'PASSION', ans:'passionate',
+      explain:'PASSION → passionate (adjective); suffix -ate forms adjectives from nouns' },
+    { id:'p3q2', gap:18, root:'EXPERIENCE', ans:'experienced',
+      explain:'EXPERIENCE → experienced (adjective); suffix -d/-ed forms adjectives meaning "having experience"' },
+    { id:'p3q3', gap:19, root:'PASSIONATE', ans:'passion',
+      explain:'PASSIONATE → passion (noun); remove suffix to get the root noun' },
+    { id:'p3q4', gap:20, root:'PASSION', ans:'passionately',
+      explain:'PASSION → passionately (adverb); suffix -ate + -ly = adverb of manner' },
+    { id:'p3q5', gap:21, root:'EMBARRASS', ans:'embarrassing',
+      explain:'EMBARRASS → embarrassing (adjective); -ing form describes what caused the feeling' },
+    { id:'p3q6', gap:22, root:'ACCIDENT', ans:'accidentally',
+      explain:'ACCIDENT → accidentally (adverb); suffix -al + -ly; modifies "dropped"' },
+    { id:'p3q7', gap:23, root:'CELEBRATE', ans:'celebration',
+      explain:'CELEBRATE → celebration (noun); suffix -tion forms nouns from verbs' },
+    { id:'p3q8', gap:24, root:'BUNCH', ans:'bunch',
+      explain:'BUNCH stays as BUNCH — already a noun; "a bunch of grapes" = container expression' },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 4 — USE OF ENGLISH: Key Word Transformation  (FCE Part 4)
+// Rewrite the sentence using a given key word. 2–5 words only.
+// Tests: paraphrase, grammar structures, fixed phrases.
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p4',
+  label: 'Part 4 — Use of English: Key Word Transformation',
+  type: 'key_word',
+  instructions: 'For questions 25–30, complete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given.',
+  questions: [
+    { id:'p4q1', num:25,
+      sentence1: 'She relies on her sister for support.',
+      keyword: 'DEPENDS',
+      sentence2: 'She ________ her sister for support.',
+      ans: 'depends on',
+      explain: 'rely on = depend on; same meaning, different verb + same preposition' },
+    { id:'p4q2', num:26,
+      sentence1: '"I feel ashamed," said Marco, after tripping in front of everyone.',
+      keyword: 'EMBARRASSED',
+      sentence2: 'Marco felt ________ tripping in front of everyone.',
+      ans: 'embarrassed about',
+      explain: 'feel embarrassed about = feel ashamed about; adjective + preposition' },
+    { id:'p4q3', num:27,
+      sentence1: 'They were separated for years, but then they met again.',
+      keyword: 'REUNITED',
+      sentence2: 'After years apart, they were ________ each other.',
+      ans: 'reunited with',
+      explain: 'be reunited with = meet again after a long time apart; fixed expression' },
+    { id:'p4q4', num:28,
+      sentence1: 'The lake water was so dirty that we could not swim.',
+      keyword: 'POLLUTED',
+      sentence2: 'The lake was ________ for swimming.',
+      ans: 'too polluted',
+      explain: 'too + adjective = so adjective that you cannot do something; too polluted for swimming' },
+    { id:'p4q5', num:29,
+      sentence1: 'I always call my old friends every month.',
+      keyword: 'TOUCH',
+      sentence2: 'I always ________ my old friends every month.',
+      ans: 'keep in touch with',
+      explain: 'keep in touch with = stay in contact with; fixed three-word phrase' },
+    { id:'p4q6', num:30,
+      sentence1: 'She is really interested in modern art.',
+      keyword: 'CRAZY',
+      sentence2: 'She is ________ modern art.',
+      ans: 'crazy about',
+      explain: 'crazy about = very enthusiastic/passionate about; same meaning, different fixed phrase' },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 5 — READING: Long Text + Multiple Choice  (PET Part 3 / FCE Part 5)
+// An article followed by 5 four-option multiple-choice questions.
+// Tests: gist, detail, inference, attitude, vocabulary in context.
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p5',
+  label: 'Part 5 — Reading Comprehension',
+  type: 'reading_mc',
+  instructions: 'For questions 31–35, read the article below and choose the answer (A, B, C or D) which you think fits best according to the text.',
+  passage: `THE LAST SHOP ON THE STREET\n\nWhen the delicatessen on Crane Street finally closed its doors last winter, many residents said it felt like losing an old friend. For over thirty years, it had been the kind of place where you could buy a loaf of freshly baked bread, a bunch of herbs from the countryside, or simply stand at the counter and talk. The owner, a small, open-minded woman called Vera, knew the name of every regular customer — and their relatives.\n\nVera had not planned to close. But the street had changed. A large supermarket had opened two roads away, and footfall — the number of people walking past — had dropped (A.quickly B.urgently C.continually D.nearly) week by week. By autumn, she was struggling. "I'm not embarrassed to say it was hard," she told a local newspaper. "But I'm also not bitter. The neighbourhood gave me thirty wonderful years."\n\nNot everyone accepted the closure quietly. A group of locals began a campaign to save the shop, gathering over 400 signatures in a single weekend. They argued that losing the delicatessen would also mean losing a meeting place — somewhere people came not just to buy a packet of coffee or a box of biscuits, but to feel connected. "When you take away small shops," one campaigner said, "you take away the chance to talk to someone who actually knows you."\n\nIn the end, a local charity stepped in and bought the premises. It will reopen next spring as a community-run shop, partly stocked with goods from local countryside producers. Vera has agreed to help train the volunteers. "I'm really passionate about what this place means," she said. "I'd love to come back and see it full of people again — even if I'm not the one behind the counter."`,
+  questions: [
+    { id:'p5q1', num:31,
+      q: 'What does the writer suggest about Vera\'s delicatessen in the first paragraph?',
+      opts: ['A. It only sold bread and herbs.','B. It was an important part of the community.','C. It was the most profitable shop on the street.','D. It was opened thirty years ago by Vera\'s relatives.'],
+      ans: 'B',
+      explain: '"losing an old friend", "knew the name of every regular customer" — it was socially important' },
+    { id:'p5q2', num:32,
+      q: 'Why did Vera\'s shop begin to struggle?',
+      opts: ['A. She argued with her regular customers.','B. The quality of her products went down.','C. A larger competitor opened nearby.','D. The street was closed for building work.'],
+      ans: 'C',
+      explain: '"A large supermarket had opened two roads away, and footfall had dropped" — direct cause stated' },
+    { id:'p5q3', num:33,
+      q: 'Which word in the second paragraph (A–D) correctly fills the gap in the original text?',
+      opts: ['A. quickly','B. urgently','C. continually','D. nearly'],
+      ans: 'C',
+      explain: '"continually" = without stopping over time; fits "dropped continually week by week"' },
+    { id:'p5q4', num:34,
+      q: 'What point did the campaigners make about small shops?',
+      opts: ['A. They are cheaper than supermarkets.','B. They help people feel part of a community.','C. They produce less waste than large stores.','D. They should be protected by local government.'],
+      ans: 'B',
+      explain: '"somewhere people came… to feel connected" / "you take away the chance to talk to someone who actually knows you"' },
+    { id:'p5q5', num:35,
+      q: 'What is Vera\'s attitude towards the shop reopening?',
+      opts: ['A. She is disappointed it will be run by a charity.','B. She is enthusiastic and hopes to be involved.','C. She thinks it will be too different from her original shop.','D. She is unsure whether it will attract enough customers.'],
+      ans: 'B',
+      explain: '"I\'m really passionate about what this place means" / "I\'d love to come back" — enthusiastic' },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 6 — READING: Gapped Text  (FCE Part 6 / PET Part 4)
+// A text with 5 removed sentences. Choose from 7 sentences (A–G).
+// Two sentences are NOT used. Tests: cohesion, coherence, text structure.
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p6',
+  label: 'Part 6 — Reading: Gapped Text',
+  type: 'gapped_text',
+  instructions: 'For questions 36–40, five sentences have been removed from the article below. Choose from sentences A–G the one which fits each gap. There are TWO extra sentences that do not fit.',
+  passage: `LEARNING TO PHOTOGRAPH BIRDS\n\nI never imagined I would spend my weekends lying on the ground in a field. But that is exactly what I found myself doing this past spring, after buying my first camera. (36)___.\n\nIt started simply enough. A friend suggested I try photographing birds near the sea shore. (37)___. I had no idea how patient you had to be, or how quietly you had to move. That first morning, I crept through the long grass for nearly an hour before I saw anything worth photographing.\n\nThe birds themselves were extraordinary. Their feathers caught the light in ways I had never noticed before — tiny, (38)___. I took over three hundred photographs that first day and was embarrassed to find that only four of them were any good.\n\nAs the weeks passed, I improved. I began to depend on a small notebook where I wrote down what I had seen and where. (39)___. Friends and relatives started asking to see my pictures, and some of them were genuinely surprised.\n\nNow, every Sunday morning, I wake up early — even when I would rather have a lie in — and go out before sunrise. (40)___. It is a passion I did not plan to have, but one I would not give up for anything.`,
+  options: {
+    'A': 'Occasionally I would feel a bit embarrassed showing them, but mostly I felt proud.',
+    'B': 'I was so pleased with the results that I joined an online photography group that same evening.',
+    'C': 'It was a small detail that changed everything — and I nearly missed it.',
+    'D': 'The light at that hour is unlike anything you see at any other time of day.',
+    'E': 'Until that point, I had been completely uninterested in the natural world.',
+    'F': 'He was passionate about wildlife and thought it might help me feel more connected to the countryside.',
+    'G': 'It turned out to be a completely new way of seeing the world.',
   },
-  {
-    id:'grammar', label:'Section 2 — Grammar',
-    instructions:'Choose the correct form, fill in the blank, or rewrite the sentence.',
-    questions:[
-      { id:'g1', type:'mc',
-        q:'Choose the correct form: "I remember ___ her at the party last summer."',
-        opts:['meet','to meet','meeting','met'], ans:2 },
-      { id:'g2', type:'mc',
-        q:'Which sentence uses a STATE VERB correctly?',
-        opts:['I am knowing the answer.','She is believing you.','He knows the answer.','They are preferring tea.'], ans:2 },
-      { id:'g3', type:'fill',
-        q:'Fill in the correct quantifier: "There isn\'t ___ milk left — can you buy some?" (much / many / a few)',
-        ans:'much' },
-      { id:'g4', type:'rewrite',
-        q:'Rewrite this sentence using the correct connector (although / however / so):\n"The weather was terrible. We still went for a walk."',
-        hint:'Use "although" to join them into one sentence.',
-        ans:'Although the weather was terrible, we still went for a walk.' },
-      { id:'g5', type:'mc',
-        q:'Choose the correct article: "___ apple a day keeps the doctor away."',
-        opts:['A','An','The','—'], ans:1 },
-      { id:'g6', type:'fill',
-        q:'Fill in: "Is there ___ sugar? I\'d like a little in my tea." (some / any / no)',
-        ans:'any' },
-      { id:'g7', type:'mc',
-        q:'Which time preposition is correct? "I was born ___ 1999."',
-        opts:['at','on','in','for'], ans:2 },
-      { id:'g8', type:'mc',
-        q:'Choose the sentence with a correct ADVERB:',
-        opts:['She sings beautiful.','She sings beautifully.','She sings beauty.','She is a beautifully singer.'], ans:1 },
-      { id:'g9', type:'fill',
-        q:'Fill in the correct container: "a ___ of bread" — the long, whole kind. (loaf / packet / slice / bunch)',
-        ans:'loaf' },
-      { id:'g10', type:'mc',
-        q:'Which sentence uses the -ED adjective correctly?',
-        opts:['The movie was bored — I was boring.','The movie was very boring — I was bored.','I am very interest in this topic.','She felt embarrassing.'], ans:1 },
-      { id:'g11', type:'fill',
-        q:'Fill in with the correct -ED/-ING form: "He was ___ by the news — nobody expected it." (surprised / surprising)',
-        ans:'surprised' },
-      { id:'g12', type:'mc',
-        q:'"___ you finish your homework, you can watch TV." Choose the connector.',
-        opts:['Although','However','So','Since'], ans:2 },
-      { id:'g13', type:'rewrite',
-        q:'Rewrite using the correct quantifier (a little / a few):\n"I have ___ friends in this city — maybe three or four."',
-        hint:'Use "a few" for countable nouns (people, things).',
-        ans:'I have a few friends in this city.' },
-      { id:'g14', type:'fill',
-        q:'Fill in: "She bought a ___ of grapes at the market." (bunch / loaf / packet / box)',
-        ans:'bunch' },
-      { id:'g15', type:'mc',
-        q:'Choose the correct sentence with "some / any / every / no + body/thing/where":',
-        opts:['"I don\'t have some friends here."','"She has any idea."','"There is nobody in the room."','"He went anywhere."'], ans:2 },
-      { id:'g16', type:'mc',
-        q:'"She ___ to school every day." Which form is correct? (state/habit)',
-        opts:['is walking','walks','has walked','was walking'], ans:1 },
-      { id:'g17', type:'fill',
-        q:'Fill in with the correct irregular past: "We ___ a great film last night." (see)',
-        ans:'saw' },
-      { id:'g18', type:'mc',
-        q:'Choose the correct sentence with time prepositions:',
-        opts:['I will see you on the morning.','She was born in June.','We met at Monday.','He works in the weekend.'], ans:1 },
-    ]
-  },
-  {
-    id:'reading', label:'Section 3 — Reading',
-    instructions:'Read the text carefully, then answer the questions below.',
-    passage:`My name is Lena and I live in a small but lively neighbourhood on the first floor of an apartment building. It's a bit polluted because of the traffic, but apart from that, it's a great place to live. There's a chemist's just around the corner, a delicatessen where I buy a loaf of bread every morning, and a newsagent's where I pick up a newspaper on Sundays.\n\nI usually have a lie in on weekends — I don't get up until nine or ten. Then I go for a walk along the sea shore, which is only a fifteen-minute walk away. I'm crazy about photography, so I always bring my camera. I'm also interested in languages — I've been learning English for three years and I'm nearly fluent now.\n\nMy neighbour is a kind, open-minded woman called Sara. She rescued a tiny kitten last month — it got lost near the shore and was creeping under the cars. Sara is passionate about animals and continually volunteers at the local shelter.`,
-    questions:[
-      { id:'r1', type:'mc',
-        q:'Where does Lena live?',
-        opts:['In a house with a garden','On the first floor of an apartment building','By the sea shore in a cottage','Above the delicatessen'], ans:1 },
-      { id:'r2', type:'mc',
-        q:'What does Lena buy at the delicatessen every morning?',
-        opts:['A newspaper','A bunch of grapes','A loaf of bread','A packet of biscuits'], ans:2 },
-      { id:'r3', type:'fill',
-        q:'According to the text, what time does Lena usually get up on weekends? Write ONE word or phrase.',
-        ans:'nine or ten' },
-      { id:'r4', type:'mc',
-        q:'What is Lena "crazy about"?',
-        opts:['Languages','Photography','Animals','Walking'], ans:1 },
-      { id:'r5', type:'tf',
-        q:'True or False? Sara found the kitten in the chemist\'s.',
-        ans:'False' },
-      { id:'r6', type:'tf',
-        q:'True or False? The neighbourhood is described as being polluted because of traffic.',
-        ans:'True' },
-      { id:'r7', type:'fill',
-        q:'Find ONE word in the text that means "without stopping, all the time".',
-        ans:'continually' },
-      { id:'r8', type:'mc',
-        q:'Which word best describes Sara\'s personality based on the text?',
-        opts:['Shy and quiet','Kind and passionate','Embarrassed and tiny','Urgent and polluted'], ans:1 },
-      { id:'r9', type:'short',
-        q:'In your own words, why does Lena bring a camera when she goes for a walk? (1–2 sentences)' },
-      { id:'r10', type:'short',
-        q:'What TWO hobbies or interests does Lena mention? Write them in your own words.' },
-    ]
-  },
-  {
-    id:'writing', label:'Section 4 — Writing',
-    instructions:'Write full, detailed answers. Pay attention to grammar, vocabulary, and connectors.',
-    questions:[
-      { id:'w1', type:'writing',
-        q:'Describe yourself in 6–8 sentences.\n\nInclude ALL of the following:\n• Where you live and what floor\n• What you look like (hair, any features)\n• Your personality (use at least 2 adjectives from the course)\n• TWO things you are crazy about or interested in\n• What you do on weekends (use: have a lie in / go for a walk or run)\n\nUse at least 5 vocabulary words from the course.',
-        minWords:80 },
-      { id:'w2', type:'writing',
-        q:'Write a paragraph (6–8 sentences) about your neighbourhood or a place you like.\n\nYou MUST include:\n• "although" used to join two contrasting ideas\n• "however" at the start of a sentence\n• "so" to show a result\n• At least TWO specific shop types from the course (chemist\'s, newsagent\'s, delicatessen, off-licence, clothes shop)\n• One container expression (a loaf of / a bunch of / a packet of / a bottle of / a pair of)',
-        minWords:80 },
-      { id:'w3', type:'writing',
-        q:'A friend who lives abroad asks you:\n"What do you do on a typical weekend? Do you ever go out or do you prefer staying in?"\n\nWrite a detailed reply (7–10 sentences). You MUST use:\n• "have a lie in"\n• "go for a walk / run"\n• "it depends on…"\n• "come back / return"\n• "a bit"\n• ONE quantifier: (much / many / a few / a little) in a correct sentence\n• ONE connector: (although / however / so)',
-        minWords:100 },
-    ]
-  },
-  {
-    id:'speaking', label:'Section 5 — Speaking',
-    instructions:'Record a voice message for each task. Aim for the suggested time. Send recordings to your teacher via WhatsApp or Telegram after submitting.',
-    questions:[
-      { id:'s1', type:'speaking',
-        q:'Talk about your daily routine and weekend habits.\n\nCover ALL of these points:\n• What time you usually get up — do you have a lie in on weekends?\n• Whether you go for a walk or run — where, how often\n• Something you are crazy about or interested in — describe it in detail\n• How your weekend plans depend on the weather or other people\n• ONE thing that is different about your weekdays vs weekends',
-        tip:'Useful language: "I usually…", "It depends on…", "I\'m crazy about…", "Apart from that…", "On weekdays I tend to…", "However, on weekends…"',
-        duration:'90 seconds' },
-      { id:'s2', type:'speaking',
-        q:'Describe TWO people — one family member and one friend.\n\nFor EACH person say:\n• What they look like in detail (hair colour/style, beard, height, any features)\n• Their personality — use at least 2 adjectives (open-minded, kind, passionate, crazy about something)\n• One thing they are passionate about and how they show it\n• Something surprising or interesting about them\n\nImagine you are showing photos of them.',
-        tip:'Useful language: "This is a photo of…", "She/He has… hair", "Apart from that…", "A bit…", "She is passionate about… and she continually…", "What I find interesting is that…"',
-        duration:'90 seconds' },
-      { id:'s3', type:'speaking',
-        q:'You are talking to an English-speaking friend who is visiting your city for the first time.\n\nTell them:\n• What shops are nearby and what you can buy there (use specific shop names)\n• A place you would recommend and why\n• What you usually do in the neighbourhood — describe a typical walk\n• One thing that is a bit polluted or not perfect, but why you still like it\n• Invite them to do something specific with you (go for a walk, buy something, etc.)',
-        tip:'Useful language: "There\'s a… just around the corner", "I\'d recommend…", "Although it\'s a bit…, it\'s still great because…", "Why don\'t we…", "You can buy a loaf of / a packet of…"',
-        duration:'90 seconds' },
-    ]
+  answers: { 36:'G', 37:'F', 38:'C', 39:'A', 40:'D' },
+  explain: {
+    36: 'G — "a completely new way of seeing the world" follows from the surprising image of lying in a field',
+    37: 'F — "He was passionate about wildlife" explains why the friend suggested it',
+    38: 'C — "a small detail that changed everything — and I nearly missed it" fits after describing the feathers',
+    39: 'A — "embarrassed showing them, but mostly felt proud" fits after describing improvement in photos',
+    40: 'D — "The light at that hour is unlike anything" fits perfectly after "go out before sunrise"',
   }
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 7 — WRITING  (Cambridge B1/B2 style)
+// Task 1: Email reply (~100 words). Task 2: Article or story (~100 words).
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p7',
+  label: 'Part 7 — Writing',
+  type: 'writing',
+  instructions: 'Complete both tasks. Write in complete sentences.',
+  questions: [
+    {
+      id: 'p7q1', label: 'Task 1 — Email reply (around 100 words)',
+      type: 'email',
+      prompt: `You have received this email from your English penfriend, Jack:\n\n"Hi! I'm doing a project on how people spend their free time and what they're passionate about. Can you help me? Please tell me:\n– What do you usually do at weekends? Do you have a lie in or go for a walk?\n– Is there something you are crazy about — a hobby or activity you do every week?\n– Is there somewhere in your neighbourhood where you like to go, and what can you buy there?\n\nThanks so much!"\n\nWrite your email reply to Jack. Answer all three questions. Write around 100 words.`,
+      checklist: ['Answer all 3 of Jack\'s questions','Mention at least one specific shop or place','Use at least one course phrase naturally (e.g. "keep in touch", "go for a walk", "a bit", "it depends")'],
+      minWords: 80,
+    },
+    {
+      id: 'p7q2', label: 'Task 2 — Article (around 100 words)',
+      type: 'article',
+      prompt: `You have seen this notice on a website for English learners:\n\n★ ARTICLES WANTED: A PERSON WHO INSPIRED ME ★\nTell us about someone — a family member, neighbour, or friend — who inspired you. What are they like? What are they passionate about? What did they do that impressed you? The most interesting articles will be published on our website!\n\nWrite your article. Include:\n– what the person is like (personality and appearance)\n– something they are passionate or crazy about\n– something they did that surprised or impressed you\n\nWrite around 100 words. Give your article a title.`,
+      checklist: ['Give your article a title','Describe the person\'s personality clearly','Mention something they are passionate about','Use although, however, or so at least once'],
+      minWords: 80,
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────────────────────────
+// PART 8 — SPEAKING  (Cambridge B1 Preliminary / B2 First format)
+// ──────────────────────────────────────────────────────────────────────
+{
+  id: 'p8',
+  label: 'Part 8 — Speaking',
+  type: 'speaking',
+  instructions: 'Record your answer for each task. You will have a few seconds to prepare before you speak.',
+  questions: [
+    {
+      id: 'p8q1', label: 'Part A — Interview (about 2 minutes)',
+      q: `Answer the following questions. Speak naturally — imagine you are talking to an examiner.\n\n1. Tell me something about where you live. Do you like your neighbourhood?\n2. What do you usually do at weekends? Do you tend to go out or stay at home?\n3. Is there something you\'re really crazy about — something you do every week?\n4. Tell me about a person in your life who you think is open-minded or passionate about something.`,
+      tip: 'Give full answers. Use: "I usually…", "It depends on…", "Apart from that…", "I\'m really into…", "She/he is passionate about…"',
+      duration: '2 minutes',
+    },
+    {
+      id: 'p8q2', label: 'Part B — Describe a photograph (about 1 minute)',
+      q: `Imagine you can see this photograph:\n\nA busy street on a sunny morning. On the left there is a small newsagent\'s with a display of magazines outside. Next to it is a chemist\'s. In the foreground, an elderly man is carrying a loaf of bread and a bunch of flowers. In the background, a woman with dyed hair is looking in the window of a clothes shop. A child, wearing a bright yellow coat, is crouching down to look at a tiny bird on the pavement.\n\nDescribe this photograph in as much detail as you can. Talk about what you can see and what you think is happening.`,
+      tip: '"In the foreground…" / "On the left/right…" / "In the background…" / "The man looks as if he is…" / "I can see…" / "I think she might be…"',
+      duration: '1 minute',
+    },
+    {
+      id: 'p8q3', label: 'Part C — Collaborative task (about 2 minutes)',
+      q: `A local community centre wants to attract more young people. They are thinking about which activities to offer. Here are five ideas:\n\n• A weekly photography walk in the countryside\n• A cooking class where people make dishes using local produce (bread, cheese, fruit)\n• A language exchange where you can practise a foreign language\n• A film club showing international films\n• A community garden project\n\nTalk about the advantages and disadvantages of each idea and then decide together which TWO ideas would be most successful. Give reasons for your choices.`,
+      tip: '"I think… would be popular because…" / "Although… is a good idea, it might be…" / "I\'d rather… because…" / "It depends on who comes." / "What do you think about…?"',
+      duration: '2 minutes',
+    },
+  ]
+},
+
 ];
+
+
 
 
 function initProgressView() {
@@ -1598,71 +1680,92 @@ function showPtTab(tab) {
 function renderPtQuestions() {
   const body = document.getElementById('pt-questions-body');
   let html = '';
-  let qNum = 0;
-
-  const typeLabel = {mc:'Multiple choice', fill:'Fill in blank', tf:'True / False',
-    match:'Matching', rewrite:'Rewrite', short:'Short answer', writing:'Writing', speaking:'Speaking'};
 
   PT_SECTIONS.forEach(sec => {
     html += `<div class="pt-section-hd">${esc(sec.label)}</div>`;
-    if (sec.instructions) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">${esc(sec.instructions)}</div>`;
+    if (sec.instructions) html += `<div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">${esc(sec.instructions)}</div>`;
 
-    if (sec.passage) {
-      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:var(--ink);white-space:pre-wrap">${esc(sec.passage)}</div>`;
+    const passage = sec.passage;
+    if (passage) {
+      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.8;color:var(--ink);white-space:pre-wrap;max-height:260px;overflow-y:auto">${esc(passage)}</div>`;
     }
 
-    sec.questions.forEach(q => {
-      qNum++;
-      const tl = typeLabel[q.type] || q.type;
-      html += `<div class="pt-q-row">
-        <div class="pt-q-meta">
-          <span>Q${qNum}</span>
-          <span class="pt-type-badge">${tl}</span>
-        </div>
-        <div class="pt-q-text">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
-
-      if (q.type === 'mc') {
-        html += `<div class="pt-opts-preview">`;
-        q.opts.forEach((opt, i) => {
-          html += `<div class="pt-opt-preview ${i === q.ans ? 'correct-opt' : ''}">
-            ${i === q.ans ? '✓' : '○'} ${esc(opt)}</div>`;
+    if (sec.type === 'cloze_mc') {
+      sec.questions.forEach(q => {
+        const corrOpt = q.opts.find(o => o[0] === q.ans);
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span class="pt-gap-label">(${q.gap})</span><span class="pt-type-badge">MC Cloze</span></div>
+          <div class="pt-opts-preview">`;
+        q.opts.forEach(opt => {
+          html += `<div class="pt-opt-preview ${opt[0]===q.ans?'correct-opt':''}">${opt[0]===q.ans?'✓':'○'} ${esc(opt)}</div>`;
         });
-        html += `</div>`;
+        html += `</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(q.explain||'')}</div></div>`;
+      });
 
-      } else if (q.type === 'tf') {
-        html += `<div class="pt-opts-preview">
-          <div class="pt-opt-preview ${q.ans==='True'?'correct-opt':''}">${q.ans==='True'?'✓':'○'} True</div>
-          <div class="pt-opt-preview ${q.ans==='False'?'correct-opt':''}">${q.ans==='False'?'✓':'○'} False</div>
-        </div>`;
+    } else if (sec.type === 'open_cloze') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span class="pt-gap-label">(${q.gap})</span><span class="pt-type-badge">Open Cloze</span></div>
+          <div class="pt-answer-key">✓ ${esc(q.ans)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(q.explain||'')}</div></div>`;
+      });
 
-      } else if (q.type === 'fill' || q.type === 'rewrite') {
-        if (q.hint) html += `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:6px">${esc(q.hint)}</div>`;
-        html += `<div class="pt-answer-key">✓ Answer: ${esc(q.ans)}</div>`;
+    } else if (sec.type === 'word_formation') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span class="pt-gap-label">(${q.gap})</span><span class="pt-type-badge">Word Formation</span>
+          <span style="font-size:12px;color:var(--yellow);margin-left:6px">Root: ${esc(q.root)}</span></div>
+          <div class="pt-answer-key">✓ ${esc(q.ans)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(q.explain||'')}</div></div>`;
+      });
 
-      } else if (q.type === 'match') {
-        html += `<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">`;
-        q.pairs.forEach(pair => {
-          html += `<div style="display:flex;gap:10px;font-size:13px;align-items:center">
-            <span style="background:var(--surface2);padding:4px 10px;border-radius:var(--rs);border:1px solid var(--border);min-width:120px">${esc(pair[0])}</span>
-            <span style="color:var(--muted)">→</span>
-            <span style="color:var(--green)">${esc(pair[1])}</span>
-          </div>`;
+    } else if (sec.type === 'key_word') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span>Q${q.num}</span><span class="pt-type-badge">Key Word Transformation</span></div>
+          <div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:4px">${esc(q.sentence1)}</div>
+          <div style="font-size:12px;color:var(--yellow);margin-bottom:4px">KEY WORD: <strong>${esc(q.keyword)}</strong></div>
+          <div class="pt-answer-key">✓ ${esc(q.ans)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(q.explain||'')}</div></div>`;
+      });
+
+    } else if (sec.type === 'reading_mc') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span>Q${q.num}</span><span class="pt-type-badge">Reading MC</span></div>
+          <div class="pt-q-text" style="margin-bottom:8px">${esc(q.q)}</div>
+          <div class="pt-opts-preview">`;
+        q.opts.forEach(opt => {
+          html += `<div class="pt-opt-preview ${opt[0]===q.ans?'correct-opt':''}">${opt[0]===q.ans?'✓':'○'} ${esc(opt)}</div>`;
         });
-        html += `</div>`;
+        html += `</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(q.explain||'')}</div></div>`;
+      });
 
-      } else if (q.type === 'speaking') {
-        html += `<div class="pt-speaking-prompt">${esc(q.tip)}</div>`;
-        if (q.duration) html += `<div class="pt-speaking-tip">Target: ${esc(q.duration)}</div>`;
-
-      } else if (q.type === 'writing') {
-        if (q.minWords) html += `<div class="pt-speaking-tip">Min. ${q.minWords} words — graded manually</div>`;
-
-      } else {
-        html += `<div class="pt-speaking-tip">Open answer — graded manually</div>`;
-      }
-
+    } else if (sec.type === 'gapped_text') {
+      html += `<div style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--rs)">`;
+      Object.entries(sec.options).forEach(([letter, text]) => {
+        const isAnswer = Object.values(sec.answers).includes(letter);
+        html += `<div style="font-size:13px;${isAnswer?'color:var(--green)':''};line-height:1.5">
+          <strong>${letter}</strong>: ${esc(text)}${isAnswer?` ✓`:''}</div>`;
+      });
       html += `</div>`;
-    });
+      Object.entries(sec.answers).forEach(([num, correct]) => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span>Gap ${num}</span><span class="pt-type-badge">Gapped Text</span></div>
+          <div class="pt-answer-key">✓ ${correct}: "${esc(sec.options[correct]||'')}"</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc((sec.explain||{})[num]||'')}</div></div>`;
+      });
+
+    } else if (sec.type === 'writing') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span class="pt-type-badge">Writing</span></div>
+          <div style="font-size:13px;color:var(--ink);line-height:1.6">${esc(q.label)}</div>
+          ${q.minWords?`<div class="pt-speaking-tip">Min. ${q.minWords} words — graded manually</div>`:''}
+          ${q.checklist?`<div style="font-size:12px;color:var(--muted);margin-top:4px">Checklist: ${q.checklist.map(c=>esc(c)).join(' · ')}</div>`:''}
+        </div>`;
+      });
+
+    } else if (sec.type === 'speaking') {
+      sec.questions.forEach(q => {
+        html += `<div class="pt-q-row"><div class="pt-q-meta"><span class="pt-type-badge">Speaking</span>${q.duration?`<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(q.duration)}</span>`:''}</div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">${esc(q.label)}</div>
+          <div class="pt-speaking-prompt">${esc(q.tip)}</div></div>`;
+      });
+    }
   });
 
   body.innerHTML = html;
@@ -1730,28 +1833,29 @@ async function ensurePtAssignment(aida) {
   renderPtSubmissions(aida, sub);
 }
 
-function ptTeacherAutoScore(q, answers) {
-  const ans = answers[q.id];
-  if (q.type === 'mc') {
-    const ok = parseInt(ans) === q.ans;
-    return { scored:true, ok, givenLabel: q.opts[parseInt(ans)] ?? '(no answer)', correctLabel: q.opts[q.ans] };
-  } else if (q.type === 'fill' || q.type === 'rewrite') {
-    const given   = String(ans||'').trim().toLowerCase().replace(/[.!?]$/,'');
-    const correct = String(q.ans||'').trim().toLowerCase().replace(/[.!?]$/,'');
-    return { scored:true, ok: given===correct, givenLabel: ans||'(blank)', correctLabel: q.ans };
-  } else if (q.type === 'tf') {
-    const ok = String(ans||'').toLowerCase() === String(q.ans).toLowerCase();
-    return { scored:true, ok, givenLabel: ans||'(no answer)', correctLabel: q.ans };
-  } else if (q.type === 'match') {
-    if (!ans || typeof ans !== 'object') return { scored:true, ok:false };
-    const allOk = q.pairs.every((_,i) => parseInt(ans[i]) === i);
-    return { scored:true, ok:allOk, matchDetail: q.pairs.map((p,i) => ({
-      term: p[0], correct: p[1],
-      given: q.pairs[parseInt(ans[i])]?.[1] ?? '(not chosen)',
-      ok: parseInt(ans[i]) === i
-    })) };
+// Score one section — matches ptScoreSec logic on student side
+function ptTeacherScoreSec(sec, answers) {
+  let score = 0, max = 0;
+  const qs = sec.questions || [];
+  if (sec.type === 'cloze_mc' || sec.type === 'reading_mc') {
+    qs.forEach(q => { max++; if (answers[q.id] === q.ans) score++; });
+  } else if (sec.type === 'open_cloze' || sec.type === 'word_formation') {
+    qs.forEach(q => { max++;
+      if (String(answers[q.id]||'').trim().toLowerCase() === q.ans.toLowerCase()) score++;
+    });
+  } else if (sec.type === 'key_word') {
+    qs.forEach(q => { max++;
+      const given = String(answers[q.id]||'').trim().toLowerCase().replace(/[.!?]$/,'');
+      const correct = q.ans.toLowerCase().replace(/[.!?]$/,'');
+      if (given === correct) score++;
+    });
+  } else if (sec.type === 'gapped_text') {
+    Object.entries(sec.answers).forEach(([num, correct]) => {
+      max++;
+      if ((answers[sec.id]||{})[num] === correct) score++;
+    });
   }
-  return { scored:false, ok:false };
+  return { score, max };
 }
 
 function renderPtSubmissions(aida, sub) {
@@ -1768,18 +1872,16 @@ function renderPtSubmissions(aida, sub) {
   }
 
   const answers = sub.answers || {};
-  const allQs   = PT_SECTIONS.flatMap(s => s.questions);
   const notes   = sub.feedback_notes || {};
 
-  // Auto-score
+  // Compute auto-score across all sections
   let autoScore = 0, autoMax = 0;
-  allQs.forEach(q => {
-    const { scored, ok } = ptTeacherAutoScore(q, answers);
-    if (scored) { autoMax++; if (ok) autoScore++; }
+  PT_SECTIONS.forEach(sec => {
+    const { score, max } = ptTeacherScoreSec(sec, answers);
+    autoScore += score; autoMax += max;
   });
 
-  const typeLabel = {mc:'MC', fill:'Fill', tf:'T/F', match:'Match', rewrite:'Rewrite',
-    short:'Short answer', writing:'Writing', speaking:'Speaking'};
+  const totalQs = PT_SECTIONS.flatMap(s => s.questions || []);
 
   let html = `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
@@ -1787,7 +1889,7 @@ function renderPtSubmissions(aida, sub) {
         <div style="font-size:15px;font-weight:600">${esc(aida.name)}</div></div>
       <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Submitted</div>
         <div style="font-size:13px">${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '—'}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Auto-score</div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Auto-score (Parts 1–6)</div>
         <div style="font-size:20px;font-weight:600;color:var(--cyan)">${autoScore} / ${autoMax}</div></div>
       <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Status</div>
         <div style="font-size:13px">${sub.status === 'graded'
@@ -1795,74 +1897,136 @@ function renderPtSubmissions(aida, sub) {
           : '<span style="color:var(--yellow)">Needs grading</span>'}</div></div>
     </div>`;
 
-  let qNum = 0;
+  // Render each section
   PT_SECTIONS.forEach(sec => {
-    html += `<div class="pt-section-hd">${esc(sec.label)}</div>`;
-    if (sec.passage) {
-      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:12px 14px;margin-bottom:12px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-wrap">${esc(sec.passage)}</div>`;
+    const { score, max } = ptTeacherScoreSec(sec, answers);
+    html += `<div class="pt-section-hd">${esc(sec.label)}`;
+    if (max) html += ` <span style="font-size:12px;color:var(--cyan);font-weight:400">${score}/${max}</span>`;
+    html += `</div>`;
+
+    if (sec.passage && (sec.type === 'cloze_mc' || sec.type === 'open_cloze' || sec.type === 'word_formation' || sec.type === 'reading_mc')) {
+      html += `<div style="background:var(--surface2);border-left:3px solid var(--cyan);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;margin-bottom:10px;font-size:12px;line-height:1.7;color:var(--muted);max-height:160px;overflow-y:auto;white-space:pre-wrap">${esc(sec.passage)}</div>`;
     }
-    sec.questions.forEach(q => {
-      qNum++;
-      const tl = typeLabel[q.type] || q.type;
-      const { scored, ok, givenLabel, correctLabel, matchDetail } = ptTeacherAutoScore(q, answers);
-      const ans = answers[q.id];
 
-      html += `<div class="pt-answer-block">
-        <div class="pt-q-label">Q${qNum} · ${tl}</div>
-        <div class="pt-q-body">${esc(q.q).replace(/\n/g,'<br>')}</div>`;
+    const qs = sec.questions || [];
 
-      if (scored) {
-        if (q.type === 'match' && matchDetail) {
-          matchDetail.forEach(m => {
-            html += `<div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px">
-              <span class="pt-auto-tag ${m.ok?'pt-auto-ok':'pt-auto-bad'}" style="flex-shrink:0">${m.ok?'✓':'✗'}</span>
-              <span style="min-width:110px;color:var(--ink)">${esc(m.term)}</span>
-              <span style="color:var(--muted)">→</span>
-              <span style="${m.ok?'color:var(--green)':'color:var(--red)'}">${esc(m.given)}</span>
-              ${!m.ok ? `<span style="color:var(--muted);font-size:12px">(correct: ${esc(m.correct)})</span>` : ''}
-            </div>`;
-          });
-        } else {
-          html += `<div class="pt-student-ans">${esc(givenLabel)}</div>
-            <div style="margin-top:5px">
-              <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
-              ${!ok && correctLabel ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: ${esc(correctLabel)}</span>` : ''}
-            </div>`;
-        }
-      } else if (q.type === 'writing' || q.type === 'short') {
-        html += `<div class="pt-student-ans">${esc(ans) || '<em style="color:var(--muted)">No answer</em>'}</div>`;
-        const wc = ans ? ans.trim().split(/\s+/).length : 0;
-        if (wc) html += `<div style="font-size:11px;color:var(--muted);margin-top:3px">${wc} words</div>`;
-        html += `<div style="margin-top:8px">
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Feedback / notes:</label>
-          <textarea id="pt-note-${q.id}" placeholder="Write feedback here…" style="width:100%;min-height:60px;resize:vertical">${esc(notes[q.id]||'')}</textarea>
+    if (sec.type === 'cloze_mc') {
+      qs.forEach(q => {
+        const ok = answers[q.id] === q.ans;
+        const givenOpt = q.opts.find(o => o[0] === answers[q.id]);
+        const corrOpt  = q.opts.find(o => o[0] === q.ans);
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">Gap (${q.gap}) · MC Cloze</div>
+          <div class="pt-student-ans">${esc(givenOpt || '(not answered)')}</div>
+          <div style="margin-top:5px">
+            <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+            ${!ok ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: ${esc(corrOpt||q.ans)}</span><div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:26px">${esc(q.explain||'')}</div>` : ''}
+          </div>
         </div>`;
-      } else if (q.type === 'speaking') {
-        html += `<div style="font-size:13px;color:var(--muted);font-style:italic">Voice message — check WhatsApp/Telegram.</div>`;
-        html += `<div style="margin-top:8px">
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Speaking feedback:</label>
-          <textarea id="pt-note-${q.id}" placeholder="Fluency, pronunciation, vocabulary, grammar…" style="width:100%;min-height:60px;resize:vertical">${esc(notes[q.id]||'')}</textarea>
-        </div>`;
-      }
+      });
 
-      html += `</div>`;
-    });
+    } else if (sec.type === 'open_cloze' || sec.type === 'word_formation') {
+      const label = sec.type === 'word_formation' ? 'Word Formation' : 'Open Cloze';
+      qs.forEach(q => {
+        const given = String(answers[q.id]||'').trim();
+        const ok = given.toLowerCase() === q.ans.toLowerCase();
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">Gap (${q.gap}) · ${label}${q.root ? ` · Root: <strong style="color:var(--yellow)">${esc(q.root)}</strong>` : ''}</div>
+          <div class="pt-student-ans">${esc(given || '(blank)')}</div>
+          <div style="margin-top:5px">
+            <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+            ${!ok ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: <strong>${esc(q.ans)}</strong></span><div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:26px">${esc(q.explain||'')}</div>` : ''}
+          </div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'key_word') {
+      qs.forEach(q => {
+        const given = String(answers[q.id]||'').trim();
+        const ok = given.toLowerCase().replace(/[.!?]$/,'') === q.ans.toLowerCase().replace(/[.!?]$/,'');
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">Q${q.num} · Key Word Transformation · KEY WORD: <strong style="color:var(--yellow)">${esc(q.keyword)}</strong></div>
+          <div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:6px">${esc(q.sentence1)}</div>
+          <div class="pt-student-ans">${esc(given || '(blank)')}</div>
+          <div style="margin-top:5px">
+            <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+            ${!ok ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: <strong>${esc(q.ans)}</strong></span><div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:26px">${esc(q.explain||'')}</div>` : ''}
+          </div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'reading_mc') {
+      qs.forEach(q => {
+        const ok = answers[q.id] === q.ans;
+        const givenOpt = q.opts.find(o => o[0] === answers[q.id]);
+        const corrOpt  = q.opts.find(o => o[0] === q.ans);
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">Q${q.num} · Reading MC</div>
+          <div class="pt-q-body">${esc(q.q)}</div>
+          <div class="pt-student-ans">${esc(givenOpt || '(not answered)')}</div>
+          <div style="margin-top:5px">
+            <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+            ${!ok ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: ${esc(corrOpt||q.ans)}</span><div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:26px">${esc(q.explain||'')}</div>` : ''}
+          </div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'gapped_text') {
+      const secAns = answers[sec.id] || {};
+      Object.entries(sec.answers).forEach(([num, correct]) => {
+        const given = secAns[num] || '';
+        const ok = given === correct;
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">Gap ${num} · Gapped Text</div>
+          <div class="pt-student-ans">${given ? `${given}: "${esc(sec.options[given]||'')}"` : '(not answered)'}</div>
+          <div style="margin-top:5px">
+            <span class="pt-auto-tag ${ok?'pt-auto-ok':'pt-auto-bad'}">${ok?'✓ Correct':'✗ Wrong'}</span>
+            ${!ok ? `<span style="font-size:12px;color:var(--muted);margin-left:8px">Correct: ${correct}: "${esc(sec.options[correct]||'')}"</span><div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:26px">${esc((sec.explain||{})[num]||'')}</div>` : ''}
+          </div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'writing') {
+      qs.forEach(q => {
+        const ans = answers[q.id] || '';
+        const wc = ans.trim() ? ans.trim().split(/\s+/).length : 0;
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">${esc(q.label)} · Writing</div>
+          <div class="pt-student-ans">${esc(ans) || '<em style="color:var(--muted)">No answer</em>'}</div>
+          ${wc ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${wc} words</div>` : ''}
+          <div style="margin-top:8px">
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Feedback:</label>
+            <textarea id="pt-note-${q.id}" style="width:100%;min-height:60px;resize:vertical" placeholder="Content, vocabulary, grammar, connectors used…">${esc(notes[q.id]||'')}</textarea>
+          </div>
+        </div>`;
+      });
+
+    } else if (sec.type === 'speaking') {
+      qs.forEach(q => {
+        html += `<div class="pt-answer-block">
+          <div class="pt-q-label">${esc(q.label)} · Speaking</div>
+          <div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:8px">Check WhatsApp/Telegram for the voice recording.</div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Feedback:</label>
+          <textarea id="pt-note-${q.id}" style="width:100%;min-height:60px;resize:vertical" placeholder="Fluency, pronunciation, vocabulary range, grammar accuracy…">${esc(notes[q.id]||'')}</textarea>
+        </div>`;
+      });
+    }
   });
 
   html += `
     <div class="pt-grade-inputs">
       <div class="fgroup">
-        <label>Overall score</label>
+        <label>Overall score (you may adjust)</label>
         <div class="pt-score-row">
-          <input type="number" id="pt-total-score" value="${sub.score ?? autoScore}" min="0" max="${allQs.length}" style="width:80px"/>
-          <span style="color:var(--muted);font-size:13px">/ ${allQs.length} &nbsp;·&nbsp; ${autoMax} auto-scored, ${allQs.length - autoMax} manual</span>
+          <input type="number" id="pt-total-score" value="${sub.score ?? autoScore}" min="0" max="${autoMax + (totalQs.filter(q => ['writing','speaking'].includes(q.type || (PT_SECTIONS.find(s=>s.questions?.includes(q))?.type))).length * 2)}" style="width:80px"/>
+          <span style="color:var(--muted);font-size:13px">&nbsp;·&nbsp; ${autoMax} auto-scored in Parts 1–6; add manual scores for Parts 7–8</span>
         </div>
       </div>
       <div class="fgroup">
-        <label>Overall feedback for ${esc(aida.name)}</label>
-        <textarea id="pt-feedback" placeholder="Overall feedback — well done on…, work on…">${esc(sub.feedback||'')}</textarea>
+        <label>Overall written feedback for ${esc(aida.name)}</label>
+        <textarea id="pt-feedback" placeholder="Overall: well done on…, work on…">${esc(sub.feedback||'')}</textarea>
       </div>
-      <button class="btn pri" onclick="savePtGrade('${sub.id}','${aida.id}',${allQs.length})">Save Grade</button>
+      <button class="btn pri" onclick="savePtGrade('${sub.id}','${aida.id}',${autoMax})">Save Grade</button>
     </div>`;
 
   el.innerHTML = html;
